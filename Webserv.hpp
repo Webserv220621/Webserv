@@ -1,0 +1,16 @@
+# include "common.hpp"
+# include "Config.hpp"
+# include "Server.hpp"
+
+class Webserv 
+{
+    public :
+        void read_config(std::string filename);
+        void server_run(void){
+            server_list.run();
+        }
+    private :
+        Config config;
+        std::map<int, Server> server_list;
+        int server_len;
+}
