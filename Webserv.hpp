@@ -5,12 +5,18 @@
 class Webserv 
 {
     public :
-        void read_config(std::string filename);
+        void read_config(std::string filename){
+            config.parse();
+        }
         void server_run(void){
+            for (i = 0; i < 서버 개수; i++)
+            {
+                
+            }
             server_list.run();
         }
     private :
         Config config;
-        std::map<int, Server> server_list;
+        std::vector<int, Server> server_list;
         int server_len;
 }
