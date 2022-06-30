@@ -1,11 +1,18 @@
 # include "common.hpp"
-# include "Location.hpp"
+
+typedef struct location {
+    // 들어가야 하는 정보 정하기 
+}   loction;
 
 class Server 
 {
     public :
-        void run(void);
+        void run(void){
+        }
+
     private :
-        std::map<int, Location> locations;
+        std::vector<location> locations;
+        std::string m_host;
+        std::string m_port;
         
 }
