@@ -1,0 +1,46 @@
+#ifndef _REQUEST_HPP_
+# define _REQUEST_HPP_
+
+# include <iostream>
+# include <map>
+
+enum {
+	READING_STARTLINE = 0,
+	READING_HEADERS,
+	READING_BODY,
+	RECV_END
+};
+
+class Request {
+	private:
+		std::string m_prev;
+		std::string m_method;
+		std::string m_uri;
+		std::string m_version;
+		std::map<std::string, std::string> m_headers;
+		std::string m_body;
+		int m_current_state;
+		bool m_is_done;
+		bool m_is_valid;
+		int parse_startline(std::string& buf);
+		int parse_headers(std::string& buf);
+		int process_startline(std::string& buf);
+		int process_headers(std::string& buf);
+		int process_body(std::string& buf);
+		
+	public:
+		Request();
+		~Request();
+		int append(std::string& buf);
+		bool is_done() const;
+		const int getState() const;
+		const std::string& getMethod() const;
+		const std::string& getUri() const;
+		const std::string& getVersion() const;
+		std::string& getHeader(std::string& key) ;
+		std::string& getBody() const;
+		
+		std::map<std::string,std::string>& getAllHeaders();
+};
+
+#endif
