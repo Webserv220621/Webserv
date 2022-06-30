@@ -19,6 +19,8 @@ class Request {
 		std::string m_version;
 		std::map<std::string, std::string> m_headers;
 		std::string m_body;
+		bool m_body_chunked;
+		long m_body_length;
 		int m_current_state;
 		bool m_is_done;
 		bool m_is_valid;
@@ -27,6 +29,8 @@ class Request {
 		int process_startline(std::string& buf);
 		int process_headers(std::string& buf);
 		int process_body(std::string& buf);
+		int process_body_chunked(std::string& buf);
+		int process_body_length(std::string& buf);
 		
 	public:
 		Request();
@@ -37,10 +41,11 @@ class Request {
 		const std::string& getMethod() const;
 		const std::string& getUri() const;
 		const std::string& getVersion() const;
-		std::string& getHeader(std::string& key) ;
-		std::string& getBody() const;
+		std::string& getHeaderValue(std::string& key);
+		const std::string& getBody() const;
+		bool isValid() const;
 		
-		std::map<std::string,std::string>& getAllHeaders();
+		const std::map<std::string,std::string>& getAllHeaders() const;
 };
 
 #endif
