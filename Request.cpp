@@ -12,34 +12,44 @@ Request::Request() {
 Request::~Request() {};
 
 int Request::append(std::string& buf) {
-	
+	int ret = 0;
+
 	while (!buf.empty()) {
 		if (m_current_state == READING_STARTLINE)
-			process_startline(buf);
+			ret = process_startline(buf);
 		else if (m_current_state == READING_HEADERS)
-			process_headers(buf);
+			ret = process_headers(buf);
 		else if (m_current_state == READING_BODY)
-			process_body(buf);
+			ret = process_body(buf);
 		else
 			break;
+		if (ret == FAIL)
+			break;
 	}
-	return 0;
+	return ret;
 }
 
 // line을 공백단위로 잘라서 method, uri, version에 저장
 int Request::parse_startline(std::string& line) {
 	size_t start_pos = 0, next;
+
 	next = line.find(' ');
+	if (next == std::string::npos)
+		return FAIL;
 	m_method = line.substr(0, next);
 	start_pos = next;
 	while (line[start_pos] == ' ')
 		start_pos++;
 	next = line.find(' ', start_pos);
+	if (next == std::string::npos)
+		return FAIL;
 	m_uri = line.substr(start_pos, next - start_pos);
 	start_pos = next;
 	while (line[start_pos] == ' ')
 		start_pos++;
 	m_version = line.substr(start_pos);
+	if (m_version.substr(0,5) != "HTTP/")
+		return FAIL;
 	return 0;
 }
 
@@ -65,8 +75,10 @@ int Request::process_startline(std::string& buf) {
 		buf = m_prev.substr(n + 2);
 		m_prev = "";
 		if (parse_startline(line) == FAIL) {
+			m_current_state = RECV_END;
 			m_is_done = true;
 			m_is_valid = false;
+			return FAIL;
 		}
 		else {
 			m_current_state = READING_HEADERS;
@@ -88,7 +100,16 @@ int Request::process_headers(std::string& buf) {
 			m_current_state = RECV_END;
 		}
 		else if (m_method == "POST") {
-			if (m_headers["content-length"].empty() && m_headers["transfer-encoding"].empty()) {
+			if (m_headers.count("content-length")) {
+				m_body_length = strtol(m_headers["content-length"].c_str(), NULL, 0);
+				if (m_body_length < 0) {
+					m_is_done = true;
+					m_is_valid = false;
+					m_current_state = RECV_END;
+					return FAIL;
+				}
+			}
+			if (m_headers.count("content-length") == 0 && m_headers.count("transfer-encoding") == 0) {
 				m_is_done = true;
 				m_is_valid = false;
 				m_current_state = RECV_END;
@@ -97,14 +118,10 @@ int Request::process_headers(std::string& buf) {
 				m_current_state = READING_BODY;
 				buf = m_prev.substr(n+2);
 				m_prev = "";
-				if (!m_headers["transfer-encoding"].empty())
+				if (m_headers.count("transfer-encoding"))
 					m_body_chunked = true;
-				else
-					m_body_length = strtol(m_headers["content-length"].c_str(), NULL, 0);
 			}
 		}
-		else
-			;
 	}
 	else {
 		std::string line = m_prev.substr(0, n);
@@ -113,6 +130,7 @@ int Request::process_headers(std::string& buf) {
 		if (parse_headers(line) == FAIL) {
 			m_is_done = true;
 			m_is_valid = false;
+			return FAIL;
 		}
 	}
 	return 0;
@@ -167,6 +185,10 @@ const std::map<std::string,std::string>& Request::getAllHeaders() const {
 
 const std::string& Request::getBody() const {
 	return m_body;
+}
+
+bool Request::isDone() const {
+	return m_is_done;
 }
 
 bool Request::isValid() const {
