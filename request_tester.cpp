@@ -42,9 +42,13 @@ void prn_info(Request& rq) {
 int main() {
 	std::string str;
 
+	Request rq0;
+	str = "GET / H\r\n";
+	rq0.append(str);
+	std::cout << "state of rq0" << std::endl;
+	prn_info(rq0);
+
 	Request rq1;
-
-
 	str = "GET     /    HTTP/1.";
 	rq1.append(str);
 	std::cout << "\n\nstate of rq1" << std::endl;
@@ -71,12 +75,15 @@ int main() {
 	rq2.append(str);
 	std::cout << "\n\nstate of rq2" << std::endl;
 	prn_info(rq2);
-
+std::cout << "\n\n\n";
 	Request rq3;
-	str = "POST / HTTP/1.1\r\nhost:abc.com\r\ntransfer-encoding:chunked\r\n\r\nabsa";
+	str = "POST / HTTP/1.1\r\nhost:abc.com\r\ntransfer-encoding:chunked\r\n\r\n5\r\nabcde\r\n3\r\nfgh\r\n0\r\n\r\n";
 	rq3.append(str);
 	std::cout << "\n\nstate of rq3" << std::endl;
 	prn_info(rq3);
+
+
+
 
 	return 0;
 }

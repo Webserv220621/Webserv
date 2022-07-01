@@ -116,7 +116,7 @@ int Request::process_headers(std::string& buf) {
 			}
 			else {
 				m_current_state = READING_BODY;
-				buf = m_prev.substr(n+2);
+				buf = m_prev.substr(n + 2);
 				m_prev = "";
 				if (m_headers.count("transfer-encoding"))
 					m_body_chunked = true;
@@ -125,7 +125,7 @@ int Request::process_headers(std::string& buf) {
 	}
 	else {
 		std::string line = m_prev.substr(0, n);
-		buf = m_prev.substr(n+2);
+		buf = m_prev.substr(n + 2);
 		m_prev = "";
 		if (parse_headers(line) == FAIL) {
 			m_is_done = true;
@@ -145,7 +145,43 @@ int Request::process_body(std::string& buf) {
 }
 
 int Request::process_body_chunked(std::string& buf) {
-	buf = "";
+	if (!m_chunk_size_ready) {
+		size_t n = m_prev.find("\r\n");
+		if (n == std::string::npos) {
+			buf = "";
+		}
+		else {
+			buf = m_prev.substr(n + 2);
+			// chunk size를 16진수->10진수로 변환
+			m_chunk_size = strtol(m_prev.c_str(), NULL, 16);
+			m_chunk_size_ready = true;
+			m_current_body_size += m_chunk_size;
+			m_prev = "";
+		}
+	}
+	else {
+		// m_chunk_data가 m_chunk_size + \r\n을 가지고 있을 때까지 append
+		if (m_chunk_data.size() + m_prev.size() < m_chunk_size + 2)
+			m_chunk_data.append(m_prev);
+		else {
+			size_t n_pos = m_chunk_size + 2 - m_chunk_data.size();
+			m_chunk_data.append(m_prev.substr(0, n_pos));
+			buf = m_prev.substr(n_pos);
+			m_prev = "";
+			// m_chunk_data는 \r\n으로 끝나야 한다
+			if (m_chunk_data.substr(m_chunk_data.size() - 2) != "\r\n")
+				return FAIL;
+			if (m_chunk_size == 0) {
+				m_is_done = true;
+				m_is_valid = true;
+				m_current_state = RECV_END;
+				return 0;
+			}
+			m_body.append(m_chunk_data.substr(0, m_chunk_data.size() - 2));
+			m_chunk_data = "";
+			m_chunk_size_ready = false;
+		}
+	}
 	return 0;
 }
 

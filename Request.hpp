@@ -21,9 +21,14 @@ class Request {
 		std::string m_body;
 		bool m_body_chunked;
 		long m_body_length;
+		bool m_chunk_size_ready;
+		long m_chunk_size;
+		long m_current_body_size;
+		std::string m_chunk_data;
 		int m_current_state;
 		bool m_is_done;
 		bool m_is_valid;
+
 		int parse_startline(std::string& buf);
 		int parse_headers(std::string& buf);
 		int process_startline(std::string& buf);
@@ -36,14 +41,14 @@ class Request {
 		Request();
 		~Request();
 		int append(std::string& buf);
-		bool is_done() const;
+		bool isDone() const;
+		bool isValid() const;
 		const int getState() const;
 		const std::string& getMethod() const;
 		const std::string& getUri() const;
 		const std::string& getVersion() const;
 		std::string& getHeaderValue(std::string& key);
 		const std::string& getBody() const;
-		bool isValid() const;
 		
 		const std::map<std::string,std::string>& getAllHeaders() const;
 };
