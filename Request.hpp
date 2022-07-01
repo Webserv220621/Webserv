@@ -4,11 +4,21 @@
 # include <iostream>
 # include <map>
 
-enum {
+# define MAX_URI 8192
+
+enum rq_state {
 	READING_STARTLINE = 0,
 	READING_HEADERS,
 	READING_BODY,
 	RECV_END
+};
+
+enum response_code {
+	BAD_REQUEST = 400,
+	LENGTH_REQUIRED = 411,
+	URI_TOO_LONG = 414,
+	NOT_IMPLEMENTED = 501,
+	HTTP_VERSION_NOT_SUPPORTED = 505
 };
 
 class Request {

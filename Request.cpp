@@ -1,7 +1,7 @@
 #include <iostream>
 #include "Request.hpp"
 
-#define FAIL -1
+#define BAD_REQUEST -1
 
 Request::Request() {
 	m_current_state = READING_STARTLINE;
@@ -23,8 +23,12 @@ int Request::append(std::string& buf) {
 			ret = process_body(buf);
 		else
 			break;
-		if (ret == FAIL)
-			break;
+		if (ret != 0) {
+			m_current_state = RECV_END;
+			m_is_done = true;
+			m_is_valid = false;
+			return ret;
+		}
 	}
 	return ret;
 }
@@ -35,21 +39,25 @@ int Request::parse_startline(std::string& line) {
 
 	next = line.find(' ');
 	if (next == std::string::npos)
-		return FAIL;
+		return BAD_REQUEST;
 	m_method = line.substr(0, next);
 	start_pos = next;
 	while (line[start_pos] == ' ')
 		start_pos++;
 	next = line.find(' ', start_pos);
 	if (next == std::string::npos)
-		return FAIL;
+		return BAD_REQUEST;
 	m_uri = line.substr(start_pos, next - start_pos);
+	if (m_uri.size() > MAX_URI)
+		return URI_TOO_LONG;
 	start_pos = next;
 	while (line[start_pos] == ' ')
 		start_pos++;
 	m_version = line.substr(start_pos);
 	if (m_version.substr(0,5) != "HTTP/")
-		return FAIL;
+		return BAD_REQUEST;
+	if ( ! (m_version.substr(5) == "1.0" || m_version.substr(5) == "1.1") )
+		return HTTP_VERSION_NOT_SUPPORTED;
 	return 0;
 }
 
@@ -59,6 +67,10 @@ int Request::parse_headers(std::string& line) {
 	size_t pos = line.find(':');
 	std::string key = line.substr(0, pos);
 	std::string value = line.substr(pos+1);
+	if (key == "host" && m_headers.count("host"))
+		return BAD_REQUEST;
+	if (key == "transfer-encoding" && value != "chunked")
+		return NOT_IMPLEMENTED;
 	m_headers[key] = value;
 	return 0;
 }
@@ -74,15 +86,11 @@ int Request::process_startline(std::string& buf) {
 		std::string line = m_prev.substr(0, n);
 		buf = m_prev.substr(n + 2);
 		m_prev = "";
-		if (parse_startline(line) == FAIL) {
-			m_current_state = RECV_END;
-			m_is_done = true;
-			m_is_valid = false;
-			return FAIL;
-		}
-		else {
+		int ret = parse_startline(line);
+		if (ret != 0)
+			return ret;
+		else
 			m_current_state = READING_HEADERS;
-		}
 	}
 	return 0;
 }
@@ -94,6 +102,9 @@ int Request::process_headers(std::string& buf) {
 		buf = "";
 	}
 	else if (n == 0) {	// empty line. header수신 완료
+		if (m_headers.count("host") == 0)
+			return BAD_REQUEST;
+
 		if (m_method == "GET" || m_method == "HEAD" || m_method == "DELETE") {
 			m_is_done = true;
 			m_is_valid = true;
@@ -102,18 +113,11 @@ int Request::process_headers(std::string& buf) {
 		else if (m_method == "POST") {
 			if (m_headers.count("content-length")) {
 				m_body_length = strtol(m_headers["content-length"].c_str(), NULL, 0);
-				if (m_body_length < 0) {
-					m_is_done = true;
-					m_is_valid = false;
-					m_current_state = RECV_END;
-					return FAIL;
-				}
+				if (m_body_length < 0)
+					return BAD_REQUEST;
 			}
-			if (m_headers.count("content-length") == 0 && m_headers.count("transfer-encoding") == 0) {
-				m_is_done = true;
-				m_is_valid = false;
-				m_current_state = RECV_END;
-			}
+			if (m_headers.count("content-length") == 0 && m_headers.count("transfer-encoding") == 0)
+				return LENGTH_REQUIRED;
 			else {
 				m_current_state = READING_BODY;
 				buf = m_prev.substr(n + 2);
@@ -127,14 +131,13 @@ int Request::process_headers(std::string& buf) {
 		std::string line = m_prev.substr(0, n);
 		buf = m_prev.substr(n + 2);
 		m_prev = "";
-		if (parse_headers(line) == FAIL) {
-			m_is_done = true;
-			m_is_valid = false;
-			return FAIL;
-		}
+		int ret = parse_headers(line);
+		if (ret != 0)
+			return ret;
 	}
 	return 0;
 }
+
 int Request::process_body(std::string& buf) {
 	m_prev.append(buf);
 	if (m_body_chunked)
@@ -170,7 +173,7 @@ int Request::process_body_chunked(std::string& buf) {
 			m_prev = "";
 			// m_chunk_data는 \r\n으로 끝나야 한다
 			if (m_chunk_data.substr(m_chunk_data.size() - 2) != "\r\n")
-				return FAIL;
+				return BAD_REQUEST;
 			if (m_chunk_size == 0) {
 				m_is_done = true;
 				m_is_valid = true;
