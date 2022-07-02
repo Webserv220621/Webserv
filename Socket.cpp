@@ -45,7 +45,7 @@ void server_run(void) {
 			perror("bind error");
 			exit(1);
 		}
-		ret = listen(server_fd, 0);
+		ret = listen(server_fd, 100); //서버 소켓은 closed 상태에서 listen상태로 변경, 두 번째 인자는 연결요청 대기 큐의 크기 
 		if (ret < 0) {
 			perror("listen error");
 			exit(1);
