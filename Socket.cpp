@@ -95,9 +95,16 @@ void run_kqueue(int kq, std::vector<int> server_fds){
 			{
 				int connect_socket_fd = event_fd;
 				int rdbytes = eventlists[i].data;
+				int ret;
 				if (rdbytes > 0) {
 					char buf[4096];
-					read(connect_socket_fd, &buf, rdbytes);
+					ret = recv(connect_socket_fd, &buf, rdbytes, 0);
+					if (ret <0)
+					{
+						close(connect_socket_fd);
+						perror("data_rev func fail");
+						exit(1);
+					}
 					buf[rdbytes] = '\0';
 					std::cout << "received: " << buf << std::endl; // 수정 필요 
 					write(connect_socket_fd, buf, rdbytes); // 수정 필요 -> 커넥션 객체의 Request buf에 담아줘야 함
@@ -106,12 +113,27 @@ void run_kqueue(int kq, std::vector<int> server_fds){
 				{ 
 					std::cout << connect_socket_fd << " disconnected" << std::endl;
 					close(connect_socket_fd);
-					//close하면 자동으로 kqueue의 모니터링 대상에서도 삭제되는 듯??
 				}
 			}
 			else if (eventlists[i].filter & EVFILT_WRITE)
 			{
-				// connection 객체의 response에 담긴 내용을 send 해줌 
+				int connect_socket_fd = event_fd;
+				int sent_data = 0;
+				// Connection 객체 전체 사이즈 = RCV_SIZE
+				std::string	str = 커넥션객체.보낼데이터.substr(sent_data, RECV_SIZE);
+				int	ret = ::send(connect_socket_fd, str.c_str(), str.size(), 0);
+				if (ret == -1)
+				{
+					close(connect_socket_fd);
+					perror("data_send func fail");
+					exit(1);
+				}
+				else
+				{
+					sent_data += ret;
+					if (sent_data >= RCV_SIZE)
+						close(connect_socket_fd);
+				}
 			}
 		}
 	}
