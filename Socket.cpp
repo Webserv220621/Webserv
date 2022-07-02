@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <vector>
+#include <ctime>
 
 
 void run_kqueue(int kq, std::vector<int> server_fds);
@@ -57,10 +58,13 @@ void server_run(void) {
 }
 
 void run_kqueue(int kq, std::vector<int> server_fds){
+	struct timespec time_set;
+	time_set.tv_nsec = 0;
+	time_set.tv_sec = 2;
 	for (int i = 0; i < server_fds.size(); i++){
 		struct kevent change_list;
 		EV_SET(&change_list, server_fds[i], EVFILT_READ, EV_ADD | EV_ENABLE, NULL, NULL, NULL);
-		int ret = kevent(kq, &change_list, 1, NULL, 0, NULL);
+		int ret = kevent(kq, &change_list, 1, NULL, 0, &time_set);
 		if (ret < 0) {
 			perror("kevent fail");
 			exit(1);
@@ -71,7 +75,7 @@ void run_kqueue(int kq, std::vector<int> server_fds){
 	struct kevent eventlists[MAX_EVENTS];
 	int event_count;
 	while (1) {
-		event_count = kevent(kq, NULL, 0, eventlists, MAX_EVENTS, NULL);
+		event_count = kevent(kq, NULL, 0, eventlists, MAX_EVENTS, &time_set);
 		if (event_count < 0) {
 			std::cout << strerror(errno) << std::endl;
 			exit(1);
@@ -89,7 +93,7 @@ void run_kqueue(int kq, std::vector<int> server_fds){
 				fcntl(connect_socket_fd, F_SETFL, O_NONBLOCK);
 				struct kevent changelist_connection;
 				EV_SET(&changelist_connection, connect_socket_fd, EVFILT_READ, EV_ADD | EV_ENABLE, NULL, NULL, NULL);
-				kevent(kq, &changelist_connection, 1, NULL, 0, NULL);
+				kevent(kq, &changelist_connection, 1, NULL, 0, &time_set);
 			}
 			else if (eventlists[i].filter & EVFILT_READ)
 			{
