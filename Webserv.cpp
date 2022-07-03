@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include "Webserv.hpp"
 #include "Connection.hpp"
+#include "kevent_wrapper.hpp"
 
 Webserv::Webserv() : m_server_cnt(0) {}
 Webserv::~Webserv() {}
@@ -103,11 +104,8 @@ int Webserv::monitor_events(int kq) {
 						resp.setRawString("error code: " + std::to_string(result) + "\r\n");
 					}
 					// kqueue 에서 C-R 삭제, C-W 추가
-					struct kevent tmp;
-					EV_SET(&tmp, event_fd, EVFILT_READ, EV_DELETE, NULL, NULL, NULL);
-					kevent(kq, &tmp, 1, NULL, 0, NULL);
-					EV_SET(&tmp, event_fd, EVFILT_WRITE, EV_ADD | EV_ENABLE, NULL, NULL, NULL);
-					kevent(kq, &tmp, 1, NULL, 0, NULL);
+					remove_read_filter(kq, event_fd);
+					add_write_filter(kq, event_fd);
 				}
 			}
 			else if (eventlists[i].filter == EVFILT_WRITE)

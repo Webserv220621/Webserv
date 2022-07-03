@@ -3,6 +3,7 @@
 #include <arpa/inet.h>
 #include <sys/event.h>
 #include "Server.hpp"
+#include "kevent_wrapper.hpp"
 
 Server::Server() : m_fd(0) {}
 Server::~Server() {}
@@ -34,9 +35,7 @@ int Server::run(int kq) {
 	if (ret < 0)
 		return ERR_LISTEN;
 
-	struct kevent tmp;
-	EV_SET(&tmp, m_fd, EVFILT_READ, EV_ADD | EV_ENABLE, NULL, NULL, NULL);
-	ret = kevent(kq, &tmp, 1, NULL, 0, NULL);
+	ret = add_read_filter(kq, m_fd);
 	if (ret < 0)
 		return ERR_KQ;
 	
@@ -52,9 +51,7 @@ int Server::accept_new_connection(int kq) {
 	int conn_fd = accept(m_fd, (struct sockaddr*)&client_addr, &client_addr_len);
 	if (conn_fd > 0) {
 		fcntl(conn_fd, F_SETFL, O_NONBLOCK);
-		struct kevent tmp;
-		EV_SET(&tmp, conn_fd, EVFILT_READ, EV_ADD | EV_ENABLE, NULL, NULL, NULL);
-		kevent(kq, &tmp, 1, NULL, 0, NULL);
+		add_read_filter(kq, conn_fd);
 	}
 	return conn_fd;
 }
