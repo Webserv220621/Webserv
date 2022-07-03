@@ -72,7 +72,7 @@ int Webserv::monitor_events(int kq) {
 				connection_list[connect_socket_fd].fd = connect_socket_fd;
 				connection_list[connect_socket_fd].server = m_server_list[server_idx];
 			}
-			else if (eventlists[i].filter & EVFILT_READ)
+			else if (eventlists[i].filter == EVFILT_READ)
 			{
 				int rdbytes = eventlists[i].data;
 				char buf[rdbytes + 1];
@@ -110,7 +110,7 @@ int Webserv::monitor_events(int kq) {
 					kevent(kq, &tmp, 1, NULL, 0, NULL);
 				}
 			}
-			else if (eventlists[i].filter & EVFILT_WRITE)
+			else if (eventlists[i].filter == EVFILT_WRITE)
 			{
 				Response& response = connection_list[event_fd].response;
 				std::string str = response.getRawString();
