@@ -50,7 +50,7 @@ class Request {
 	public:
 		Request();
 		~Request();
-		int append(std::string& buf);
+		int append_msg(char* buf);
 		bool isDone() const;
 		bool isValid() const;
 		const int getState() const;
