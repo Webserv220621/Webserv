@@ -1,25 +1,24 @@
-# include "common.hpp"
-# include "Config.hpp"
+#ifndef _WEBSERV_HPP_
+# define _WEBSERV_HPP_
+
+# include <vector>
 # include "Server.hpp"
 
 class Webserv 
 {
-    public :
-        void read_config(std::string filename){
-            // 파싱 함수 작성
-            config.parse();
-        }
-        void server_run(void){
-            for (int i = 0; i < 서버 개수; i++)
-            {
-                // 서버 개수만큼 fd = socket(),bind, listen();
-            }
-            server_list.run();
-            kq = kqueue();
-            
-        }
-    private :
-        Config config;
-        std::vector<int, Server> server_list;
-        int server_len;
-}
+    private:
+        //Config config;
+        int m_server_cnt;
+        std::vector<Server> m_server_list;
+
+        int getServerIdx(int fd);
+
+    public:
+        Webserv();
+        ~Webserv();
+        int read_config(std::string filename);
+        int run();
+        int monitor_events(int kq);
+};
+
+#endif
