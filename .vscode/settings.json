@@ -61,6 +61,16 @@
         "type_traits": "cpp",
         "typeinfo": "cpp",
         "unordered_map": "cpp",
-        "utility": "cpp"
+        "utility": "cpp",
+        "map": "cpp",
+        "__bits": "cpp",
+        "__tree": "cpp",
+        "clocale": "cpp",
+        "compare": "cpp",
+        "complex": "cpp",
+        "concepts": "cpp",
+        "sstream": "cpp",
+        "variant": "cpp",
+        "filesystem": "cpp"
     }
 }

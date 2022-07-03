@@ -4,41 +4,66 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <stdlib.h>
 #include <vector>
 #include <map>
 
-typedef struct location
+struct location
 {
     std::string _root;
     std::string _index;
     std::vector<std::string> _allowmethod;
     int _bodysize;
-    int _autoindex; //off = 0, on = 1
+    int _autoindex; //off = 0, on = 1, init = -1
 };
 
-class Config
+class Server
 {
 private:
     std::string m_host;
-    std::string m_port;
+    int         m_port;
     std::string m_servername;
-    std::map<std::string, location> m_location; //std::string에 location directory->다시
+    std::map<std::string, location> m_location; //string에 location directory
+    std::map<int, std::string> m_error;
+
 public:
-    Config(/* args */);
-    Config(const Config &other);
-    ~Config();
-    Config &operator=(const Config &other);
-
-    std::string getHost();
-    std::string getPort();
-    std::string getServername();
-
-    void setHost(std::string host);
-    void setPort(std::string port);
-    void setServername(std::string servername);
+    Server();
+    Server(const Server &other);
+    ~Server();
+    Server &operator=(const Server &other);
     
-    void parsingConfig(std::string path);
+    std::string getHost()
+    {
+        return m_host;
+    }
+    int getPort()
+    {
+        return m_port;
+    }
+    std::string getServername()
+    {
+        return m_servername;
+    }
+
+    void initLocation(location *loc);
+    void parsingServer(std::vector<std::string>::iterator it, std::vector<std::string>::iterator end);
+    void printServer();// 임시 출력용
 };
 
+class Webserv
+{
+    private:
+        Server              m_tmpserv;//m_serv에 넣어주려고 만든 임시 친구
+        std::vector<Server> m_serv;
+
+    public:
+        Webserv();
+        Webserv(const Webserv &other);
+        ~Webserv();
+        Webserv &operator=(const Webserv &other);
+
+        void parsingWebserv(std::string path);
+        bool checkWrongserv();
+};
 
 #endif
