@@ -8,6 +8,8 @@
 #include <vector>
 #include <map>
 
+#include "Util.hpp"
+
 struct location
 {
     std::string _root;
@@ -17,7 +19,7 @@ struct location
     int _autoindex; //off = 0, on = 1, init = -1
 };
 
-class Server
+class Server //ConfigSever.cpp
 {
 private:
     std::string m_host;
@@ -50,7 +52,7 @@ public:
     void printServer();// 임시 출력용
 };
 
-class Webserv
+class Webserv // ConfigWebserv.cpp
 {
     private:
         Server              m_tmpserv;//m_serv에 넣어주려고 만든 임시 친구
