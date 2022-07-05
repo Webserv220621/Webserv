@@ -1,8 +1,6 @@
 #include <iostream>
 #include "Request.hpp"
 
-#define BAD_REQUEST -1
-
 Request::Request() {
 	m_current_state = READING_STARTLINE;
 	m_is_done = false;
@@ -11,8 +9,9 @@ Request::Request() {
 
 Request::~Request() {};
 
-int Request::append(std::string& buf) {
+int Request::append_msg(char* str) {
 	int ret = 0;
+	std::string buf(str);
 
 	while (!buf.empty()) {
 		if (m_current_state == READING_STARTLINE)
