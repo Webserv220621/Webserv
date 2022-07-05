@@ -13,4 +13,10 @@ int main(int argc, char *argv[])//혹시 몰라 만든 메인문
     {
         web.parsingWebserv(std::string(argv[1]));
     }
+    // for (int i = 0; i < web.getServerList().size(); i++)
+    // {
+    //     web.getServerList()[i].printServer();
+    // }
+
+    web.run();
 }

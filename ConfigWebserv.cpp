@@ -1,12 +1,5 @@
 #include "Config.hpp"
 
-Webserv::Webserv(){}
-
-Webserv::~Webserv()
-{
-    m_serv.clear();
-}
-
 void Webserv::parsingWebserv(std::string path)
 {
     std::ifstream   fout; // 파일 입력 객체
@@ -26,13 +19,12 @@ void Webserv::parsingWebserv(std::string path)
     {
         buf += tmp;//엔터 없이 저장됨 (주석 포함)
     }
-    //tab으로 구분 {,}도 저장하면 안댐
     ft_split(buf, info);// info에 띄어쓰기, 탭, 괄호 단위로 저장됨 (주석 포함)
     it = info.begin();
     while (it++ != info.end())
     {
-        m_tmpserv.parsingServer(it, info.end());// 서버 블럭 처음과 끝 넣어주기->어케 나누지
-        m_serv.push_back(m_tmpserv);
+        m_tmpserv.parsingServer(it, info.end());
+        m_server_list.push_back(m_tmpserv);
         while (*it != "server" && it != info.end())
             it++;
     }
@@ -41,22 +33,28 @@ void Webserv::parsingWebserv(std::string path)
         std::cout << "wrong config" << std::endl;
         return ;
     }
+    m_server_cnt = m_server_list.size();
 }
 
 bool Webserv::checkWrongserv()//host와 port가 동일하면 return 0
 {
-    if (m_serv.size() < 2)
+    if (m_server_list.size() < 2)
         return (1);
-    for (size_t i = 0; i < m_serv.size(); i++)
+    for (size_t i = 0; i < m_server_list.size(); i++)
     {
-        for (size_t j = i; j < m_serv.size(); j++)
+        for (size_t j = i + 1; j < m_server_list.size(); j++)
         {
-            if (m_serv[i].getHost() == m_serv[j].getHost())
+            if (m_server_list[i].getHost() == m_server_list[j].getHost())
             {
-                if (m_serv[i].getPort() == m_serv[j].getPort())
+                if (m_server_list[i].getPort() == m_server_list[j].getPort())
                     return (0);
             }
         }
     }
     return (1);
+}
+
+std::vector<Server> Webserv::getServerList()
+{
+    return m_server_list;
 }
