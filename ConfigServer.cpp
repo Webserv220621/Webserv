@@ -1,32 +1,9 @@
 #include "Config.hpp"
 
-Server::Server(){}
-
-Server::Server(const Server &other)
-{
-    *this = other;
-}
-
-Server::~Server()
-{
-    m_error.clear();
-    m_location.clear();
-}
-
-Server& Server::operator=(const Server &other)
-{
-    this->m_host = other.m_host;
-    this->m_port = other.m_port;
-    this->m_servername = other.m_servername;
-    this->m_location = other.m_location;
-    this->m_error = other.m_error;
-    return (*this);
-}
-
 void Server::initLocation(location *loc)
 {
     loc->_allowmethod.clear();
-    loc->_autoindex = -1;
+    loc->_autoindex = 0;
     loc->_bodysize = 0;
     loc->_index = "";
     loc->_root = "";
@@ -178,4 +155,5 @@ void Server::printServer()//출력용
         std::cout << "error_page : " << it2->second << std::endl;
         it2++;
     }
+    std::cout << "--------end-----------" << std::endl;
 }

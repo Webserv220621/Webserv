@@ -1,24 +1,9 @@
 #include <sys/event.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include "Webserv.hpp"
+#include "Config.hpp"
 #include "Connection.hpp"
 #include "kevent_wrapper.hpp"
-
-Webserv::Webserv() : m_server_cnt(0) {}
-Webserv::~Webserv() {}
-
-int Webserv::read_config(std::string filename) {
-	Server s("127.0.0.1", 8000);
-	m_server_list.push_back(s);
-	++m_server_cnt;
-
-	Server s2("127.0.0.1", 8080);
-	m_server_list.push_back(s2);
-	++m_server_cnt;
-
-	return 0;
-}
 
 int Webserv::run() {
 	int kq = kqueue();
@@ -26,7 +11,7 @@ int Webserv::run() {
 	// 각 서버를 bind, listen
 	for (int i = 0; i < m_server_cnt; ++i) {
 		if (m_server_list[i].run(kq) != 0) {
-			// 에러 처리
+			// TODO: 에러 처리
 			std::cout << i + 1 << "번째 서버 구동 실패" << std::endl;
 			while (i-- >= 0)
 				if (m_server_list[i].getFd() != 0)
@@ -35,6 +20,8 @@ int Webserv::run() {
 		}
 	}
 	std::cout << "listening..." << std::endl;
+	std::cout << "server cnt = " << m_server_cnt << std::endl;
+	std::cout << m_server_list[0].getHost() << " " << m_server_list[0].getPort() << std::endl;
 
 	if (monitor_events(kq) < 0)
 		return -1;
@@ -66,6 +53,7 @@ int Webserv::monitor_events(int kq) {
 		for (int i = 0; i < event_count; ++i) {
 			int event_fd = eventlists[i].ident;
 			int server_idx = getServerIdx(event_fd);
+			std::cout << server_idx;
 			if (server_idx >= 0) {
 				std::cout << "cur server fd: " << event_fd <<std::endl;
 				int connect_socket_fd = m_server_list[server_idx].accept_new_connection(kq);
@@ -130,21 +118,4 @@ int Webserv::getServerIdx(int fd) {
 			return i;
 	}
 	return -1;
-}
-
-
-
-
-
-
-
-
-int main() {
-	Webserv webserv;
-	
-	if (webserv.read_config("") < 0) {
-		std::cout << "read_config failed." << std::endl;
-	}
-
-	webserv.run();
 }
