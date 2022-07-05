@@ -14,9 +14,10 @@ struct location
 {
     std::string _root;
     std::string _index;
+    std::string _cgipath;
     std::vector<std::string> _allowmethod;
     int _bodysize;
-    int _autoindex; //off = 0, on = 1, init = -1
+    int _autoindex; //off,init = 0, on = 1
 };
 
 class Server //ConfigSever.cpp
@@ -55,14 +56,13 @@ public:
 class Webserv // ConfigWebserv.cpp
 {
     private:
-        Server              m_tmpserv;//m_serv에 넣어주려고 만든 임시 친구
-        std::vector<Server> m_serv;
+        Webserv(const Webserv &other);
+        Webserv &operator=(const Webserv &other);
 
+        std::vector<Server> m_serv;
     public:
         Webserv();
-        Webserv(const Webserv &other);
         ~Webserv();
-        Webserv &operator=(const Webserv &other);
 
         void parsingWebserv(std::string path);
         bool checkWrongserv();

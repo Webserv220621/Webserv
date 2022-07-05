@@ -30,6 +30,7 @@ void Server::initLocation(location *loc)
     loc->_bodysize = 0;
     loc->_index = "";
     loc->_root = "";
+    loc->_cgipath = "";
 }
 
 void Server::parsingServer(std::vector<std::string>::iterator it, std::vector<std::string>::iterator end)//begin(), end()
@@ -99,10 +100,15 @@ void Server::parsingServer(std::vector<std::string>::iterator it, std::vector<st
                 else if (*it == "autoindex")
                 {
                     it++;
-                    if (*it == "off;")
-                        t_location._autoindex = 0;
-                    else
+                    if (*it == "on;")
                         t_location._autoindex = 1;
+                    else
+                        t_location._autoindex = 0;
+                }
+                else if (*it == "cgi_path")
+                {
+                    it++;
+                    t_location._cgipath = checkSemicolon(*it);
                 }
                 else
                 {
@@ -152,6 +158,7 @@ void Server::printServer()//출력용
         std::cout << "direct name : " << it->first << std::endl;
         std::cout << "root : " << it->second._root << std::endl;
         std::cout << "index : " << it->second._index << std::endl;
+        std::cout << "cgi_path : " << it->second._cgipath << std::endl;
         std::cout << "bodysize : " << it->second._bodysize << std::endl;
         std::cout << "autoindex : " << it->second._autoindex << std::endl;
         std::cout << "allowmethod : ";
