@@ -1,8 +1,20 @@
 #include "Response.hpp"
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fstream>
+#include <sstream>
 
 Response::Response () {
     initResponse();
 }
+//tmp
+void Response::setPath(std::string path) {
+    m_requestPath = path;
+}
+
+// getter
+int              Response::getCode(){ return m_code; }
+std::string		Response::getBody(void) { return m_body; }
 
 void Response::initResponse() {
     m_requestPath = "";
@@ -48,7 +60,7 @@ std::string		Response::getHeader(void)
 int Response::validCheck(void) {
     if (m_requestPath == "404")
         return 404;
-    else if (1) // m_method 가 allowed_method 안에 있는지 체크해서 method not allowed 에러 출력
+    else if (0) // m_method 가 allowed_method 안에 있는지 체크해서 method not allowed 에러 출력
         return 405;
     return 0;
 }
@@ -61,6 +73,7 @@ void Response::runResponse () {
         writeBody();
     }
     else{
+        getMethod();
         if (m_method == "GET")
             getMethod();
         else if (m_method == "HEAD")
@@ -71,8 +84,67 @@ void Response::runResponse () {
             deleteMethod();
     }
 }
-void			Response::getMethod(void) {
 
+void             Response::handleGet(void) {
+    struct stat buf;
+    int         is_dir;
+    int         is_exist;
+    const char  *path;
+    std::string indexHtml;
+    std::ifstream readFile; 
+    std::stringstream readBuf;
+    
+    path = m_requestPath.c_str();
+    stat(path,&buf);
+    is_dir = buf.st_mode & S_IFDIR;
+    is_exist = access(path, F_OK); // F_OK 옵션은 파일존재여부만 확인
+	if (is_dir) // case 1 : Url이 디렉토리일 경우
+	{
+        indexHtml = m_requestPath + "index,html";
+        if (is_exist == -1)
+            m_code = 404;
+        else if (access(indexHtml.c_str(), F_OK) == 0) // 그 디렉토리에index.html이 있다면 => index.html
+        {
+            // file.open("index.html", );
+            m_contentType = "txt/html";
+        }
+        else
+        {
+            if (m_autoIndex == 0) //index.html이 없는데 autoindex가 off다 => 403 Forbidden
+            {
+                m_code = 403;
+            }
+            else // index.html이 없는데 autoindex가 on이다 => 디렉토리 리스팅
+            {  
+                m_body = "";
+                // m_body = makeIndexhtml();
+            }    
+        }
+	}
+	else // case 2 : Url이 파일인 경우 
+    {
+        if (is_exist == -1)
+            m_code = 404;
+        else
+        {
+            readFile.open(path, std::ifstream::in);
+            readBuf << readFile.rdbuf();
+            m_body = readBuf.str();
+            readFile.close();
+            m_code = 200;
+        }
+	}
+}
+
+void			Response::getMethod(void) {
+    if (m_cgiPath != "")
+	{
+        // m_code = "Status : " 파싱 
+        // m_contentType = "Content-type: " 파싱
+		// m_body = processCgi();
+	}
+	else
+		handleGet();
 }
 
 void			Response::headMethod(void) {
@@ -88,11 +160,24 @@ void			Response::deleteMethod(void) {
 }
 
 std::string Response::writeBody () {
-
+    return "";
 }
 
 void Response::writeResponseMsg(void) {
     m_responseMsg += getStartLine();
     m_responseMsg += getHeader();
     m_responseMsg += writeBody();
+}
+
+int main() {
+    Response rp;
+
+    rp.setPath("./test.txt");
+    rp.runResponse();
+    std::cout << "---body---" << std::endl;
+    std::cout << rp.getBody() << std::endl;
+    std::cout << "---code---" << std::endl;
+    std::cout << rp.getCode() << std::endl;
+
+    return 0;
 }
