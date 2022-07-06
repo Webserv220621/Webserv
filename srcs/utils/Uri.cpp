@@ -1,11 +1,23 @@
 #include "Uri.hpp"
 
+Uri::Uri() {}
+
 Uri::Uri(const std::string& uri) : m_uri(uri), m_cur_pos(0) {
 	parseUri();
 }
 
 Uri::~Uri() {}
 
+Uri& Uri::operator=(const Uri& rhs) {
+	m_uri = rhs.m_uri;
+	m_cur_pos = rhs.m_cur_pos;
+	m_scheme = rhs.m_scheme;
+	m_host = rhs.m_host;
+	m_port = rhs.m_port;
+	m_path = rhs.m_path;
+	m_query = rhs.m_query;
+	return *this;
+}
 
 void Uri::parseUri() {
 	// "://" 를 찾아서 앞부분은 sheme에 저장, cur_pos는 뒷부분을 가리키도록 업데이트
@@ -91,4 +103,8 @@ const std::string& Uri::getPath() const {
 
 const std::string& Uri::getQuery() const {
 	return m_query;
+}
+
+size_t Uri::getLength() const {
+	return m_uri.length();
 }

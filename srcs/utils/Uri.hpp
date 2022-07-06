@@ -18,20 +18,20 @@ class Uri {
 		void setPath();
 		void setQuery();
 
-
-		Uri();
 		Uri(const Uri& other);
-		Uri& operator=(const Uri& rhs);
-	
+
 	public:
+		Uri();
 		Uri(const std::string& uri);
 		~Uri();
+		Uri& operator=(const Uri& rhs);
 
 		const std::string& getScheme() const;
 		const std::string& getHost() const;
 		const std::string& getPort() const;
 		const std::string& getPath() const;
 		const std::string& getQuery() const;
+		size_t getLength() const;
 
 };
 

@@ -3,6 +3,7 @@
 
 # include <iostream>
 # include <map>
+# include "utils/Uri.hpp"
 
 # define MAX_URI 8192
 
@@ -25,7 +26,7 @@ class Request {
 	private:
 		std::string m_prev;
 		std::string m_method;
-		std::string m_uri;
+		Uri m_uri;
 		std::string m_version;
 		std::map<std::string, std::string> m_headers;
 		std::string m_body;
@@ -55,7 +56,7 @@ class Request {
 		bool isValid() const;
 		const int getState() const;
 		const std::string& getMethod() const;
-		const std::string& getUri() const;
+		const Uri& getUri() const;
 		const std::string& getVersion() const;
 		std::string& getHeaderValue(std::string& key);
 		const std::string& getBody() const;
