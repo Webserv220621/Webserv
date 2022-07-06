@@ -1,16 +1,25 @@
 NAME = a.out
-SRCS = srcs/ConfigServer.cpp \
-	   srcs/ConfigWebserv.cpp \
-	   srcs/kevent_wrapper.cpp \
-	   srcs/main.cpp \
-	   srcs/Request.cpp \
-	   srcs/Server.cpp \
-	   srcs/Util.cpp \
-	   srcs/Webserv.cpp
+SRCDIR	= srcs/
+SRCFILES= ConfigServer.cpp \
+          ConfigWebserv.cpp \
+		  kevent_wrapper.cpp \
+		  main.cpp \
+		  Request.cpp \
+		  Server.cpp \
+		  Util.cpp
+SRCS = $(addprefix $(SRCDIR), $(SRCFILES))
 
 OBJS = $(SRCS:.cpp=.o)
 CXX = c++
 CXXFLAGS = -Wall -Wextra
+
+UNAME := $(shell uname)
+ifeq ($(UNAME), Darwin)
+	SRCS += $(SRCDIR)/Webserv.cpp
+else
+	SRCS += $(SRCDIR)/Webserv_linux.cpp
+	CXXFLAGS += -D LINUX
+endif
 
 .PHONY: all clean fclean re
 
@@ -20,7 +29,7 @@ $(NAME): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
 
 %.o: %.cpp
-	$(CXX) $(CFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
 	rm -rf $(OBJS)
