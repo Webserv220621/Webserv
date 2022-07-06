@@ -1,7 +1,7 @@
 #include <sys/socket.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
-#include <sys/event.h>
+#include <cstring>
 #include "Config.hpp"
 #include "kevent_wrapper.hpp"
 
