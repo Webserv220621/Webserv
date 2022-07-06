@@ -25,7 +25,7 @@ void			Response::setBody(std::string body){
 //------------tmp--------------
 // getter
 int              Response::getCode(){ return m_code; }
-std::string		Response::getBody(void) { return m_body; }
+std::string		Response::getMsg(void) { return m_responseMsg; }
 
 void Response::initResponse() {
     m_requestPath = "";
@@ -203,24 +203,28 @@ void			Response::deleteMethod(void) {
 }
 
 std::string Response::writeBody () {
-    return "";
+    return m_body;
 }
 
 void Response::writeResponseMsg(void) {
     m_responseMsg += getStartLine();
     m_responseMsg += getHeader();
-    m_responseMsg += writeBody();
+    if (m_responseMsg != ""){
+        m_responseMsg += "\r\n";
+        m_responseMsg += writeBody();
+    }
 }
 
 int main() {
     Response rp;
     std::vector<std::string> methods = {"GET", "HEAD", "POST", "DELETE"};
     rp.setBody("asd  asd asd as dasd asd\n asd asd asd aasd ");
-    rp.setMethod(methods[2]);
+    rp.setMethod(methods[1]);
     rp.setPath("./test.txt");
     rp.runResponse();
-    std::cout << "---body---" << std::endl;
-    std::cout << rp.getBody() << std::endl;
+    rp.writeResponseMsg();
+    std::cout << "---Msg---" << std::endl;
+    std::cout << rp.getMsg() << std::endl;
     std::cout << "---code---" << std::endl;
     std::cout << rp.getCode() << std::endl;
 

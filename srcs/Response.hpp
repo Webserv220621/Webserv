@@ -45,7 +45,7 @@ class Response {
 		std::string		getStartLine(void);
 		std::string		getHeader(void);
 		int			 	getCode(void);
-		std::string		getBody(void);
+		std::string		getMsg(void);
 		// setter
 		void setPath(std::string path);	// test용 임시 
 		void			setMethod(std::string method); // test용 임시 
