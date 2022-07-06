@@ -1,0 +1,291 @@
+#include "Response.hpp"
+#include <sys/stat.h> // 파일인지 디렉토리인지 확인
+#include <unistd.h>
+#include <fstream> // 파일 입출력
+#include <sstream> // 파일 입출력
+#include <ios> // file open시 옵션 설정 
+#include <stdio.h> // remove 함수
+
+Response::Response () {
+    initResponse();
+}
+//------------tmp--------------
+void Response::setPath(std::string path) {
+    m_requestPath = path;
+}
+
+void Response::setMethod(std::string method) {
+    m_method = method;
+}
+
+void			Response::setBody(std::string body){
+    m_requestBody = body;
+}
+
+
+//------------tmp--------------
+// getter
+int              Response::getCode(){ return m_code; }
+std::string		Response::getMsg(void) { return m_responseMsg; }
+
+void Response::initResponse() {
+    m_requestPath = "";
+    m_bodySize = 0;
+    m_contentType = "";
+    m_contentLength = "";
+    m_connection = ""; 
+    m_code = 0;
+    m_autoIndex = 0;
+    m_responseMsg = "";
+    m_cgiPath =  "";
+    m_method = "";
+    m_requestBody = "";
+    m_errorMsg[100] = "Continue";
+	m_errorMsg[200] = "OK";
+	m_errorMsg[201] = "Created";
+    m_errorMsg[204] = "No contetnt";
+	m_errorMsg[400] = "Bad Request";
+	m_errorMsg[403] = "Forbidden";
+	m_errorMsg[404] = "Not Found";
+	m_errorMsg[405] = "Method Not Allowed";
+	m_errorMsg[413] = "Payload Too Large";
+}
+
+std::string		Response::getStartLine(void){
+    std::string	startLine;
+
+    startLine = "HTTP/1.1 " + std::to_string(m_code) + " " + m_errorMsg[m_code] + "\r\n";
+    return (startLine);
+}
+
+std::string		Response::getHeader(void)
+{
+	std::string	header = "";
+
+	if (m_contentLength != "")
+		header += "Content-Length: " + m_contentLength + "\r\n";
+	if (m_contentType != "")
+		header += "Content-Type: " + m_contentType + "\r\n";
+	if (m_connection != "")
+		header += "Connection: " + m_connection + "\r\n";
+	return (header);
+}
+
+int Response::validCheck(void) {
+    if (m_requestPath == "404")
+        return 404;
+    else if (0) // m_method 가 allowed_method 안에 있는지 체크해서 method not allowed 에러 출력
+        return 405;
+    return 0;
+}
+
+void Response::runResponse () {
+
+    if (validCheck() != 0) // 혹시 사전에 에러가 났을 경우, allowed method 등을 체크하여 에러있으면 바로 다음으로
+    {
+        m_code = validCheck();
+    }
+    else
+    {
+        if (m_method == "GET")
+            getMethod();
+        else if (m_method == "HEAD")
+            headMethod();
+        else if (m_method == "POST")
+            postMethod();
+        else if (m_method == "DELETE")
+            deleteMethod();
+        else
+            putMethod();
+    }
+}
+
+void             Response::handleGet(void) {
+    struct stat buf;
+    int         is_dir;
+    int         is_exist;
+    const char  *path;
+    std::string indexHtml;
+    std::ifstream readFile; 
+    std::stringstream readBuf;
+    
+    path = m_requestPath.c_str();
+    stat(path,&buf);
+    is_dir = buf.st_mode & S_IFDIR;
+    is_exist = access(path, F_OK); // F_OK 옵션은 파일존재여부만 확인
+    if (is_exist == -1)
+        m_code = 404;
+    else
+    {
+        if (is_dir) // case 1 : Url이 디렉토리일 경우
+        {
+            indexHtml = m_requestPath + "/index.html";
+            if (access(indexHtml.c_str(), F_OK) == 0) // 그 디렉토리에index.html이 있다면 => index.html
+            {
+                // file.open("index.html", );
+                m_contentType = "txt/html";
+            }
+            else
+            {
+                if (m_autoIndex == 0) //index.html이 없는데 autoindex가 off다 => 403 Forbidden
+                {
+                    m_code = 403;
+                }
+                else // index.html이 없는데 autoindex가 on이다 => 디렉토리 리스팅
+                {  
+                    m_body = "";
+                    // m_body = makeIndexhtml();
+                }    
+            }
+        }
+        else // case 2 : Url이 파일인 경우 
+        {
+            readFile.open(path, std::ifstream::in);
+            readBuf << readFile.rdbuf();
+            m_body = readBuf.str();
+            readFile.close();
+            m_code = 200;
+        }
+    }
+	
+}
+
+void			Response::getMethod(void) {
+    if (m_cgiPath != "")
+	{
+        // m_code = "Status : " 파싱 
+        // m_contentType = "Content-type: " 파싱
+		// m_body = processCgi();
+	}
+	else
+		handleGet();
+}
+
+void			Response::headMethod(void) {
+    getMethod();
+    m_body = "";
+}
+
+void Response::handlePost() {
+    const char  *path;
+    std::ofstream writeFile; 
+    
+    //html/acb/test.txt -> 에러처리 
+
+    path = m_requestPath.c_str();
+    writeFile.open(path, std::ios_base::out | std::ios_base::trunc);
+    writeFile << m_requestBody;
+    writeFile.close();
+    m_code = 201;
+}
+
+void Response::handlePut() {
+    const char  *path;
+    std::ofstream writeFile; 
+    int         is_exist;
+    
+    path = m_requestPath.c_str();
+    is_exist = access(path, F_OK); // F_OK 옵션은 파일존재여부만 확인
+    if (is_exist == 0){
+        writeFile.open(path, std::ios_base::app | std::ios_base::out);
+        writeFile << m_requestBody;
+        writeFile.close();
+        m_code = 204; // 200 or 204
+    }
+    else{
+        writeFile.open(path, std::ios_base::out);
+        writeFile << m_requestBody;
+        writeFile.close();
+        m_code = 201;
+    }
+}
+
+void			Response::postMethod(void) {
+    if (m_cgiPath != "")
+	{
+        // m_code = "Status : " 파싱 
+        // m_contentType = "Content-type: " 파싱
+		// m_body = processCgi();
+	}
+	else
+	{
+        handlePost();
+    }
+}
+
+void			Response::putMethod(void) {
+    if (m_cgiPath != "")
+	{
+        // m_code = "Status : " 파싱 
+        // m_contentType = "Content-type: " 파싱
+		// m_body = processCgi();
+	}
+	else
+	{
+        handlePut();
+    }
+}
+// 아마도 명령을 성공적으로 수행할 것 같으나 아직은 실행하지 않은 경우 202 (Accepted) 상태 코드.
+// 명령을 수행했고 더 이상 제공할 정보가 없는 경우 204 (No Content) 상태 코드.
+// 명령을 수행했고 응답 메시지가 이후의 상태를 설명하는 경우 200 (OK) 상태 코드.
+//https://developer.mozilla.org/ko/docs/Web/HTTP/Methods/DELETE
+void			Response::deleteMethod(void) {
+    struct stat buf;
+    int         is_dir;
+    const char  *path;
+    
+    // 없는 경우 에러 처리, 디렉토리이 이거나 파일이 없는 경우 에러처리 해줘야함
+    path = m_requestPath.c_str();
+    stat(path,&buf);
+    is_dir = buf.st_mode & S_IFDIR;
+	if (is_dir) // case 1 : Url이 디렉토리일 경우 -> 일단 에러 처리 403에러 Forbidden
+	{
+        m_code = 403;
+	}
+	else // case 2 : Url이 파일인 경우 
+    {
+       if (remove(path) == 0)
+			m_code = 204;
+		else // -1 리턴
+			m_code = 403;
+	}
+}
+
+std::string Response::writeBody () {
+    return m_body;
+}
+
+void Response::writeResponseMsg(void) {
+    m_responseMsg += getStartLine();
+    m_responseMsg += getHeader();
+    // 만약 m_code가 에러코드이면 html파일을 읽어 m_body에 넣어줘야 함
+    if (m_body != ""){
+        m_responseMsg += "\r\n";
+        m_responseMsg += writeBody();
+    }
+}
+
+// 헤더 setting 하는 부분도 필요
+// cgi 처리 부분도 필요
+// url 에러 처리도 필요
+
+int main() {
+    Response rp;
+    std::vector<std::string> methods = {"GET", "HEAD", "POST", "DELETE", "PUT"};
+    rp.setBody("asd  asd asd테스트중 d asd\n asd asd asd aasd ");
+    rp.setMethod(methods[4]);
+    rp.setPath("./test.txt");
+    rp.runResponse();
+    rp.writeResponseMsg();
+    std::cout << "---Msg---" << std::endl;
+    std::cout << rp.getMsg() << std::endl;
+    std::cout << "---code---" << std::endl;
+    std::cout << rp.getCode() << std::endl;
+
+
+    // struct stat buf;
+    // stat("testd", &buf); // 없으면 0, 있으면 파일 정보 
+    // std::cout << (buf.st_mode & S_IFDIR) << std::endl;
+    // std::cout << (buf.st_mode & S_IFREG) << std::endl;
+    return 0;
+}
