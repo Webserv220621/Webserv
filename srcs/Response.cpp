@@ -3,15 +3,26 @@
 #include <unistd.h>
 #include <fstream>
 #include <sstream>
+#include <ios>
 
 Response::Response () {
     initResponse();
 }
-//tmp
+//------------tmp--------------
 void Response::setPath(std::string path) {
     m_requestPath = path;
 }
 
+void Response::setMethod(std::string method) {
+    m_method = method;
+}
+
+void			Response::setBody(std::string body){
+    m_requestBody = body;
+}
+
+
+//------------tmp--------------
 // getter
 int              Response::getCode(){ return m_code; }
 std::string		Response::getBody(void) { return m_body; }
@@ -27,6 +38,7 @@ void Response::initResponse() {
     m_responseMsg = "";
     m_cgiPath =  "";
     m_method = "";
+    m_requestBody = "";
     m_errorMsg[100] = "Continue";
 	m_errorMsg[200] = "OK";
 	m_errorMsg[201] = "Created";
@@ -72,8 +84,8 @@ void Response::runResponse () {
         m_code = validCheck();
         writeBody();
     }
-    else{
-        getMethod();
+    else
+    {
         if (m_method == "GET")
             getMethod();
         else if (m_method == "HEAD")
@@ -148,11 +160,42 @@ void			Response::getMethod(void) {
 }
 
 void			Response::headMethod(void) {
-
+    getMethod();
+    m_body = "";
 }
 
+void Response::handlePost() {
+    struct stat buf;
+    int         is_dir;
+    const char  *path;
+    std::ofstream writeFile; 
+    
+    path = m_requestPath.c_str();
+    stat(path,&buf);
+    is_dir = buf.st_mode & S_IFDIR;
+	if (is_dir) // case 1 : Url이 디렉토리일 경우 -> 일단 에러 처리
+	{
+        m_code = 400;
+	}
+	else // case 2 : Url이 파일인 경우 
+    {
+        writeFile.open(path, std::ios_base::out | std::ios_base::trunc);
+		writeFile << m_requestBody;
+		writeFile.close();
+		m_code = 201;
+	}
+}
 void			Response::postMethod(void) {
-
+    if (m_cgiPath != "")
+	{
+        // m_code = "Status : " 파싱 
+        // m_contentType = "Content-type: " 파싱
+		// m_body = processCgi();
+	}
+	else
+	{
+        handlePost();
+    }
 }
 
 void			Response::deleteMethod(void) {
@@ -171,7 +214,9 @@ void Response::writeResponseMsg(void) {
 
 int main() {
     Response rp;
-
+    std::vector<std::string> methods = {"GET", "HEAD", "POST", "DELETE"};
+    rp.setBody("asd  asd asd as dasd asd\n asd asd asd aasd ");
+    rp.setMethod(methods[2]);
     rp.setPath("./test.txt");
     rp.runResponse();
     std::cout << "---body---" << std::endl;

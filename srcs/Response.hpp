@@ -8,6 +8,7 @@ class Response {
 	private:
 		std::string 				m_raw_string;
 		std::string 				m_requestPath; // 매핑된 filepath
+		std::string 				m_requestBody; // 있다면
 		size_t						m_bodySize;		// contentlength
 
 		// header
@@ -33,6 +34,7 @@ class Response {
 		std::string 	writeBody(void);
 		void			writeResponseMsg(void);
 		void			handleGet(void);
+		void			handlePost(void);
 
 		//method
 		void			getMethod(void);
@@ -45,7 +47,9 @@ class Response {
 		int			 	getCode(void);
 		std::string		getBody(void);
 		// setter
-		void setPath(std::string path);
+		void setPath(std::string path);	// test용 임시 
+		void			setMethod(std::string method); // test용 임시 
+		void			setBody(std::string body);
 		//
 		std::string getRawString() { return m_raw_string; };
 		void setRawString(std::string ss) { m_raw_string = ss;}
