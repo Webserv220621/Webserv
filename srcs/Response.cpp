@@ -81,10 +81,9 @@ int Response::validCheck(void) {
 
 void Response::runResponse () {
 
-    if (validCheck() != 0)
+    if (validCheck() != 0) // 혹시 사전에 에러가 났을 경우, allowed method 등을 체크하여 에러있으면 바로 다음으로
     {
         m_code = validCheck();
-        writeBody();
     }
     else
     {
@@ -96,6 +95,8 @@ void Response::runResponse () {
             postMethod();
         else if (m_method == "DELETE")
             deleteMethod();
+        else
+            putMethod();
     }
 }
 
@@ -112,34 +113,32 @@ void             Response::handleGet(void) {
     stat(path,&buf);
     is_dir = buf.st_mode & S_IFDIR;
     is_exist = access(path, F_OK); // F_OK 옵션은 파일존재여부만 확인
-	if (is_dir) // case 1 : Url이 디렉토리일 경우
-	{
-        indexHtml = m_requestPath + "index,html";
-        if (is_exist == -1)
-            m_code = 404;
-        else if (access(indexHtml.c_str(), F_OK) == 0) // 그 디렉토리에index.html이 있다면 => index.html
-        {
-            // file.open("index.html", );
-            m_contentType = "txt/html";
-        }
-        else
-        {
-            if (m_autoIndex == 0) //index.html이 없는데 autoindex가 off다 => 403 Forbidden
-            {
-                m_code = 403;
-            }
-            else // index.html이 없는데 autoindex가 on이다 => 디렉토리 리스팅
-            {  
-                m_body = "";
-                // m_body = makeIndexhtml();
-            }    
-        }
-	}
-	else // case 2 : Url이 파일인 경우 
+    if (is_exist == -1)
+        m_code = 404;
+    else
     {
-        if (is_exist == -1)
-            m_code = 404;
-        else
+        if (is_dir) // case 1 : Url이 디렉토리일 경우
+        {
+            indexHtml = m_requestPath + "index,html";
+            if (access(indexHtml.c_str(), F_OK) == 0) // 그 디렉토리에index.html이 있다면 => index.html
+            {
+                // file.open("index.html", );
+                m_contentType = "txt/html";
+            }
+            else
+            {
+                if (m_autoIndex == 0) //index.html이 없는데 autoindex가 off다 => 403 Forbidden
+                {
+                    m_code = 403;
+                }
+                else // index.html이 없는데 autoindex가 on이다 => 디렉토리 리스팅
+                {  
+                    m_body = "";
+                    // m_body = makeIndexhtml();
+                }    
+            }
+        }
+        else // case 2 : Url이 파일인 경우 
         {
             readFile.open(path, std::ifstream::in);
             readBuf << readFile.rdbuf();
@@ -147,7 +146,8 @@ void             Response::handleGet(void) {
             readFile.close();
             m_code = 200;
         }
-	}
+    }
+	
 }
 
 void			Response::getMethod(void) {
@@ -171,22 +171,37 @@ void Response::handlePost() {
     int         is_dir;
     const char  *path;
     std::ofstream writeFile; 
+
+    path = m_requestPath.c_str();
+    stat(path, &buf);
+    is_dir = (buf.st_mode & S_IFDIR);
+    writeFile.open(path, std::ios_base::out | std::ios_base::trunc);
+    writeFile << m_requestBody;
+    writeFile.close();
+    m_code = 201;
+}
+
+void Response::handlePut() {
+    const char  *path;
+    std::ofstream writeFile; 
+    int         is_exist;
     
     path = m_requestPath.c_str();
-    stat(path,&buf);
-    is_dir = buf.st_mode & S_IFDIR;
-	if (is_dir) // case 1 : Url이 디렉토리일 경우 -> 일단 에러 처리
-	{
-        m_code = 400;
-	}
-	else // case 2 : Url이 파일인 경우 
-    {
-        writeFile.open(path, std::ios_base::out | std::ios_base::trunc);
-		writeFile << m_requestBody;
-		writeFile.close();
-		m_code = 201;
-	}
+    is_exist = access(path, F_OK); // F_OK 옵션은 파일존재여부만 확인
+    if (is_exist == 0){
+        writeFile.open(path, std::ios_base::app | std::ios_base::out);
+        writeFile << m_requestBody;
+        writeFile.close();
+        m_code = 204; // 200 or 204
+    }
+    else{
+        writeFile.open(path, std::ios_base::out);
+        writeFile << m_requestBody;
+        writeFile.close();
+        m_code = 201;
+    }
 }
+
 void			Response::postMethod(void) {
     if (m_cgiPath != "")
 	{
@@ -197,6 +212,19 @@ void			Response::postMethod(void) {
 	else
 	{
         handlePost();
+    }
+}
+
+void			Response::putMethod(void) {
+    if (m_cgiPath != "")
+	{
+        // m_code = "Status : " 파싱 
+        // m_contentType = "Content-type: " 파싱
+		// m_body = processCgi();
+	}
+	else
+	{
+        handlePut();
     }
 }
 // 아마도 명령을 성공적으로 수행할 것 같으나 아직은 실행하지 않은 경우 202 (Accepted) 상태 코드.
@@ -225,6 +253,7 @@ void			Response::deleteMethod(void) {
 }
 
 std::string Response::writeBody () {
+    // 만약 m_code가 에러코드이면 html파일을 읽어 m_body에 넣어줘야 함
     return m_body;
 }
 
@@ -239,9 +268,9 @@ void Response::writeResponseMsg(void) {
 
 int main() {
     Response rp;
-    std::vector<std::string> methods = {"GET", "HEAD", "POST", "DELETE"};
-    rp.setBody("asd  asd asd as dasd asd\n asd asd asd aasd ");
-    rp.setMethod(methods[3]);
+    std::vector<std::string> methods = {"GET", "HEAD", "POST", "DELETE", "PUT"};
+    rp.setBody("asd  asd asd테스트중 d asd\n asd asd asd aasd ");
+    rp.setMethod(methods[4]);
     rp.setPath("./test.txt");
     rp.runResponse();
     rp.writeResponseMsg();
@@ -250,5 +279,10 @@ int main() {
     std::cout << "---code---" << std::endl;
     std::cout << rp.getCode() << std::endl;
 
+
+    // struct stat buf;
+    // stat("testd", &buf); // 없으면 0, 있으면 파일 정보 
+    // std::cout << (buf.st_mode & S_IFDIR) << std::endl;
+    // std::cout << (buf.st_mode & S_IFREG) << std::endl;
     return 0;
 }

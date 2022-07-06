@@ -35,12 +35,14 @@ class Response {
 		void			writeResponseMsg(void);
 		void			handleGet(void);
 		void			handlePost(void);
+		void			handlePut(void);
 
 		//method
 		void			getMethod(void);
 		void			headMethod(void);
 		void			postMethod(void);
 		void			deleteMethod(void);
+		void 			putMethod(void);
 		// getter
 		std::string		getStartLine(void);
 		std::string		getHeader(void);
