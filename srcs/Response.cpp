@@ -1,9 +1,10 @@
 #include "Response.hpp"
-#include <sys/stat.h>
+#include <sys/stat.h> // 파일인지 디렉토리인지 확인
 #include <unistd.h>
-#include <fstream>
-#include <sstream>
-#include <ios>
+#include <fstream> // 파일 입출력
+#include <sstream> // 파일 입출력
+#include <ios> // file open시 옵션 설정 
+#include <stdio.h> // remove 함수
 
 Response::Response () {
     initResponse();
@@ -197,9 +198,29 @@ void			Response::postMethod(void) {
         handlePost();
     }
 }
-
+// 아마도 명령을 성공적으로 수행할 것 같으나 아직은 실행하지 않은 경우 202 (Accepted) 상태 코드.
+// 명령을 수행했고 더 이상 제공할 정보가 없는 경우 204 (No Content) 상태 코드.
+// 명령을 수행했고 응답 메시지가 이후의 상태를 설명하는 경우 200 (OK) 상태 코드.
+//https://developer.mozilla.org/ko/docs/Web/HTTP/Methods/DELETE
 void			Response::deleteMethod(void) {
-
+    struct stat buf;
+    int         is_dir;
+    const char  *path;
+    
+    path = m_requestPath.c_str();
+    stat(path,&buf);
+    is_dir = buf.st_mode & S_IFDIR;
+	if (is_dir) // case 1 : Url이 디렉토리일 경우 -> 일단 에러 처리 403에러 Forbidden
+	{
+        m_code = 403;
+	}
+	else // case 2 : Url이 파일인 경우 
+    {
+       if (remove(path) == 0)
+			m_code = 204;
+		else // -1 리턴
+			m_code = 403;
+	}
 }
 
 std::string Response::writeBody () {
@@ -219,7 +240,7 @@ int main() {
     Response rp;
     std::vector<std::string> methods = {"GET", "HEAD", "POST", "DELETE"};
     rp.setBody("asd  asd asd as dasd asd\n asd asd asd aasd ");
-    rp.setMethod(methods[1]);
+    rp.setMethod(methods[3]);
     rp.setPath("./test.txt");
     rp.runResponse();
     rp.writeResponseMsg();
