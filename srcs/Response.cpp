@@ -43,6 +43,7 @@ void Response::initResponse() {
     m_errorMsg[100] = "Continue";
 	m_errorMsg[200] = "OK";
 	m_errorMsg[201] = "Created";
+    m_errorMsg[204] = "No contetnt";
 	m_errorMsg[400] = "Bad Request";
 	m_errorMsg[403] = "Forbidden";
 	m_errorMsg[404] = "Not Found";
