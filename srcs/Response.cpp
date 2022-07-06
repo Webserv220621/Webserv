@@ -252,13 +252,13 @@ void			Response::deleteMethod(void) {
 }
 
 std::string Response::writeBody () {
-    // 만약 m_code가 에러코드이면 html파일을 읽어 m_body에 넣어줘야 함
     return m_body;
 }
 
 void Response::writeResponseMsg(void) {
     m_responseMsg += getStartLine();
     m_responseMsg += getHeader();
+    // 만약 m_code가 에러코드이면 html파일을 읽어 m_body에 넣어줘야 함
     if (m_body != ""){
         m_responseMsg += "\r\n";
         m_responseMsg += writeBody();
@@ -273,7 +273,7 @@ int main() {
     Response rp;
     std::vector<std::string> methods = {"GET", "HEAD", "POST", "DELETE", "PUT"};
     rp.setBody("asd  asd asd테스트중 d asd\n asd asd asd aasd ");
-    rp.setMethod(methods[0]);
+    rp.setMethod(methods[4]);
     rp.setPath("./test.txt");
     rp.runResponse();
     rp.writeResponseMsg();
