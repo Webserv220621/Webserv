@@ -45,17 +45,19 @@ std::string		Response::getHeader(void)
 	return (header);
 }
 
-bool Response::validUrl(void) {
+int Response::validCheck(void) {
     if (m_requestPath == "404")
-        return 0;
-    return 1;
+        return 404;
+    else if (1) // m_method 가 allowed_method 안에 있는지 체크해서 method not allowed 에러 출력
+        return 405;
+    return 0;
 }
 
 void Response::runResponse () {
 
-    if (validUrl == 0)
+    if (validCheck() != 0)
     {
-        m_code = 404;
+        m_code = validCheck();
         writeBody();
     }
     else{
