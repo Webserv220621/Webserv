@@ -6,7 +6,8 @@
 
 class Response {
 	private:
-		std::string 				m_raw_string;
+		std::string 				m_raw_string; // 칸리님이 만들어놓은거
+
 		std::string 				m_requestPath; // 매핑된 filepath
 		std::string 				m_requestBody; // 있다면
 		size_t						m_bodySize;		// contentlength

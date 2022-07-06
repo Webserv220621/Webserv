@@ -119,7 +119,7 @@ void             Response::handleGet(void) {
     {
         if (is_dir) // case 1 : Url이 디렉토리일 경우
         {
-            indexHtml = m_requestPath + "index,html";
+            indexHtml = m_requestPath + "/index.html";
             if (access(indexHtml.c_str(), F_OK) == 0) // 그 디렉토리에index.html이 있다면 => index.html
             {
                 // file.open("index.html", );
@@ -167,14 +167,12 @@ void			Response::headMethod(void) {
 }
 
 void Response::handlePost() {
-    struct stat buf;
-    int         is_dir;
     const char  *path;
     std::ofstream writeFile; 
+    
+    //html/acb/test.txt -> 에러처리 
 
     path = m_requestPath.c_str();
-    stat(path, &buf);
-    is_dir = (buf.st_mode & S_IFDIR);
     writeFile.open(path, std::ios_base::out | std::ios_base::trunc);
     writeFile << m_requestBody;
     writeFile.close();
@@ -236,6 +234,7 @@ void			Response::deleteMethod(void) {
     int         is_dir;
     const char  *path;
     
+    // 없는 경우 에러 처리, 디렉토리이 이거나 파일이 없는 경우 에러처리 해줘야함
     path = m_requestPath.c_str();
     stat(path,&buf);
     is_dir = buf.st_mode & S_IFDIR;
@@ -260,17 +259,21 @@ std::string Response::writeBody () {
 void Response::writeResponseMsg(void) {
     m_responseMsg += getStartLine();
     m_responseMsg += getHeader();
-    if (m_responseMsg != ""){
+    if (m_body != ""){
         m_responseMsg += "\r\n";
         m_responseMsg += writeBody();
     }
 }
 
+// 헤더 setting 하는 부분도 필요
+// cgi 처리 부분도 필요
+// url 에러 처리도 필요
+
 int main() {
     Response rp;
     std::vector<std::string> methods = {"GET", "HEAD", "POST", "DELETE", "PUT"};
     rp.setBody("asd  asd asd테스트중 d asd\n asd asd asd aasd ");
-    rp.setMethod(methods[4]);
+    rp.setMethod(methods[0]);
     rp.setPath("./test.txt");
     rp.runResponse();
     rp.writeResponseMsg();
