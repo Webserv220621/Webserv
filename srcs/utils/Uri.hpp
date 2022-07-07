@@ -32,7 +32,7 @@ class Uri {
 		const std::string& getPath() const;
 		const std::string& getQuery() const;
 		size_t getLength() const;
-
+		void reset();
 };
 
 #endif

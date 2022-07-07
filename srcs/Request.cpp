@@ -2,9 +2,7 @@
 #include "Request.hpp"
 
 Request::Request() {
-	m_current_state = READING_STARTLINE;
-	m_is_done = false;
-	m_is_valid = false;
+	reset();
 }
 
 Request::~Request() {};
@@ -200,6 +198,14 @@ int Request::process_body_length(std::string& buf) {
 }
 
 
+bool Request::isDone() const {
+	return m_is_done;
+}
+
+bool Request::isValid() const {
+	return m_is_valid;
+}
+
 int Request::getState() const {
 	return m_current_state;
 }
@@ -217,18 +223,28 @@ std::string& Request::getHeaderValue(std::string& key) {
 	return m_headers[key];
 }
 
-const std::map<std::string,std::string>& Request::getAllHeaders() const {
-	return m_headers;
-}
-
 const std::string& Request::getBody() const {
 	return m_body;
 }
 
-bool Request::isDone() const {
-	return m_is_done;
+void Request::reset() {
+	m_prev = "";
+	m_method = "";
+	m_uri.reset();
+	m_version = "";
+	m_headers.clear();
+	m_body = "";
+	m_body_chunked = false;
+	m_body_length = 0;
+	m_chunk_size_ready = false;
+	m_chunk_size = 0;
+	m_current_body_size = 0;
+	m_chunk_data = "";
+	m_current_state = READING_STARTLINE;
+	m_is_done = false;
+	m_is_valid = false;
 }
 
-bool Request::isValid() const {
-	return m_is_valid;
+const std::map<std::string,std::string>& Request::getAllHeaders() const {
+	return m_headers;
 }

@@ -54,13 +54,14 @@ class Request {
 		int append_msg(char* buf);
 		bool isDone() const;
 		bool isValid() const;
-		int getState() const;
+		int getState() const;    // 필요없을수도..
 		const std::string& getMethod() const;
 		const Uri& getUri() const;
 		const std::string& getVersion() const;
 		std::string& getHeaderValue(std::string& key);
 		const std::string& getBody() const;
 		
+		void reset();
 		const std::map<std::string,std::string>& getAllHeaders() const;
 };
 

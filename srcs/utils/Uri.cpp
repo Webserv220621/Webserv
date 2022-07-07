@@ -108,3 +108,8 @@ const std::string& Uri::getQuery() const {
 size_t Uri::getLength() const {
 	return m_uri.length();
 }
+
+void Uri::reset() {
+	m_uri = m_scheme = m_host = m_port = m_path = m_query = "";
+	m_cur_pos = 0;
+}
