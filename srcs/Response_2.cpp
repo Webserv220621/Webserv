@@ -89,13 +89,14 @@ void Response::addDirectory(std::string &body)//https://qdmana.com/2021/08/20210
     std::string http_host_port = "http://" + m_host + m_port;
     if (http_host_port[http_host_port.length() - 1] != '/')
         http_host_port += "/";
+    
     DIR *dir;
     struct dirent *diread = NULL;
 
     body += "<h1>Index of /autoindex/</h1><hr><pre><a href=../>../</a>";
     if ((dir = opendir(m_path)) == NULL) 
     {
-        makeErrorResponse();//?
+        makeErrorResponse();
     }
     while (diread = readdir(dir))
     {
@@ -108,7 +109,7 @@ void Response::addDirectory(std::string &body)//https://qdmana.com/2021/08/20210
     closedir(dir);
 }
 
-void Response::makeAutoIndex()//200
+void Response::makeAutoIndex()//200 response.cpp 에 연결 137
 {
     std::string html = "";
     html += "<!DOCTYPE html>\n";
@@ -124,7 +125,7 @@ void Response::makeAutoIndex()//200
     m_responseMsg += html;
 }
 
-void Response::makeErrorResponse(int error)
+void Response::makeErrorResponse(int error)//261
 {
     std::string html = "";
 	html += "<!DOCTYPE html>\n";
