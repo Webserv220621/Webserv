@@ -1,6 +1,6 @@
 #include "Config.hpp"
 
-void Server::initLocation(location *loc)
+void Server::initLocation(Location *loc)
 {
     loc->_allowmethod.clear();
     loc->_autoindex = 0;
@@ -13,7 +13,7 @@ void Server::initLocation(location *loc)
 void Server::parsingServer(std::vector<std::string>::iterator it, std::vector<std::string>::iterator end)//begin(), end()
 {
     std::string         tmp;
-    location            t_location;
+    Location            t_location;
     std::vector<int>    errorNum;
     
     if (*it == "server")
@@ -118,9 +118,13 @@ void Server::parsingServer(std::vector<std::string>::iterator it, std::vector<st
     }
 }
 
+const std::map<std::string, Location>& Server::getLocations() const {
+    return m_location;
+}
+
 void Server::printServer()//출력용
 {
-    std::map<std::string, location>::iterator it = m_location.begin();
+    std::map<std::string, Location>::iterator it = m_location.begin();
 
     std::cout << "host : " << m_host << std::endl;
     std::cout << "port : " << m_port << std::endl;
