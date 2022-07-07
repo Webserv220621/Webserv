@@ -40,6 +40,8 @@ void Server::parsingServer(std::vector<std::string>::iterator it, std::vector<st
         if (*it == "location")
         {
             it++;
+            if (*it == "=")
+                it++;
             tmp = *it; // direct 저장
             initLocation(&t_location);
             it++;
@@ -87,14 +89,6 @@ void Server::parsingServer(std::vector<std::string>::iterator it, std::vector<st
                     it++;
                     t_location._cgipath = checkSemicolon(*it);
                 }
-                else
-                {
-                    if (*it != "")
-                    {
-                        tmp += " ";
-                        tmp += *it;
-                    }
-                }
             }
             m_location.insert(make_pair(tmp, t_location));
             it--;
@@ -110,12 +104,17 @@ void Server::parsingServer(std::vector<std::string>::iterator it, std::vector<st
                 it++;
             }
             std::string error_page = checkSemicolon(*it);
-            for (int i = 0; i < errorNum.size(); i++)
+            for (unsigned long i = 0; i < errorNum.size(); i++)
             {
                 m_error.insert(make_pair(errorNum[i], error_page));
             }
         }
         it++;
+    }
+    if (m_location.find("/") == m_location.end())
+    {
+        std::cout << "Need / location" << std::endl;
+        return ;
     }
 }
 
@@ -139,7 +138,7 @@ void Server::printServer()//출력용
         std::cout << "bodysize : " << it->second._bodysize << std::endl;
         std::cout << "autoindex : " << it->second._autoindex << std::endl;
         std::cout << "allowmethod : ";
-        for (int j = 0; j < it->second._allowmethod.size(); j++)
+        for (unsigned long j = 0; j < it->second._allowmethod.size(); j++)
         {
             std::cout << it->second._allowmethod[j] << " ";
         }
@@ -148,7 +147,7 @@ void Server::printServer()//출력용
     std::cout << std::endl;
     std::map<int, std::string>::iterator it2 = m_error.begin();
     std::cout << "error_page size : " << m_error.size() << std::endl; 
-    for (int j = 0; j < m_error.size(); j++)
+    for (unsigned long j = 0; j < m_error.size(); j++)
     {
         std::cout << "--------------------------" << std::endl;
         std::cout << "error_num : " << it2->first << std::endl;
