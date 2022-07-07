@@ -46,8 +46,8 @@ int Request::parse_startline(std::string& line) {
 	next = line.find(' ', start_pos);
 	if (next == std::string::npos)
 		return BAD_REQUEST;
-	m_uri = line.substr(start_pos, next - start_pos);
-	if (m_uri.size() > MAX_URI)
+	m_uri = Uri(line.substr(start_pos, next - start_pos));
+	if (m_uri.getLength() > MAX_URI)
 		return URI_TOO_LONG;
 	start_pos = next;
 	while (line[start_pos] == ' ')
@@ -206,7 +206,7 @@ const int Request::getState() const {
 const std::string& Request::getMethod() const {
 	return m_method;
 }
-const std::string& Request::getUri() const {
+const Uri& Request::getUri() const {
 	return m_uri;
 }
 const std::string& Request::getVersion() const {
