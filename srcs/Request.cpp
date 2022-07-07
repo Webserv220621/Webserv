@@ -47,6 +47,10 @@ int Request::parse_startline(std::string& line) {
 	m_uri = Uri(line.substr(start_pos, next - start_pos));
 	if (m_uri.getLength() > MAX_URI)
 		return URI_TOO_LONG;
+	if (m_uri.getHost() != "" && m_uri.getScheme() != "http")
+		return BAD_REQUEST;
+	if (m_uri.getPath()[0] != '/')
+		return BAD_REQUEST;
 	start_pos = next;
 	while (line[start_pos] == ' ')
 		start_pos++;
