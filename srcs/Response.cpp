@@ -24,6 +24,22 @@ void			Response::setBody(std::string body){
     m_requestBody = body;
 }
 
+std::map<int, std::string> Response::m_errorMsg = {
+    {100, "Continue"},
+    {200, "OK"},
+	{201, "Created"},
+    {204, "No contetnt"},
+    {301, "Moved Permanently"},
+	{400, "Bad Request"},
+	{403, "Forbidden"},
+	{404, "Not Found"},
+	{405, "Method Not Allowed"},
+    {411, "Length Required"},
+	{413, "Payload Too Large"},
+    {414, "URI Too Long"},
+    {501, "Not Implemented"},
+    {505, "HTTP Version Not Supported"}
+};
 
 //------------tmp--------------
 // getter
@@ -48,15 +64,6 @@ void Response::initResponse(Server& server, Request& request) {
     m_responseMsg = "";
     m_cgiPath =  "";
     m_requestBody = "";
-    m_errorMsg[100] = "Continue";
-	m_errorMsg[200] = "OK";
-	m_errorMsg[201] = "Created";
-    m_errorMsg[204] = "No contetnt";
-	m_errorMsg[400] = "Bad Request";
-	m_errorMsg[403] = "Forbidden";
-	m_errorMsg[404] = "Not Found";
-	m_errorMsg[405] = "Method Not Allowed";
-	m_errorMsg[413] = "Payload Too Large";
 }
 
 std::string		Response::getStartLine(void){
@@ -104,6 +111,7 @@ void Response::runResponse () {
     if (validCheck() != 0) {
         std::cout << "error code=" << m_code << std::endl;
         m_responseMsg = "you will get " + std::to_string(m_code) + " error page\r\n";
+        //TODO: makeErrorReponse(m_code);
     }
     else {
         std::cout << "request:\n";

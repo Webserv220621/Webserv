@@ -22,7 +22,7 @@ class Response {
 		std::string					m_body;
 		std::string 				m_cgiPath;
 		std::string					m_method; // req 객체로부터 가져올?
-		std::map<int, std::string>  m_errorMsg;
+		static std::map<int, std::string>  m_errorMsg;
 
 
 		//
