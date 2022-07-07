@@ -33,7 +33,7 @@ class Request {
 		bool m_body_chunked;
 		long m_body_length;
 		bool m_chunk_size_ready;
-		long m_chunk_size;
+		unsigned long m_chunk_size;
 		long m_current_body_size;
 		std::string m_chunk_data;
 		int m_current_state;
@@ -54,7 +54,7 @@ class Request {
 		int append_msg(char* buf);
 		bool isDone() const;
 		bool isValid() const;
-		const int getState() const;
+		int getState() const;
 		const std::string& getMethod() const;
 		const Uri& getUri() const;
 		const std::string& getVersion() const;

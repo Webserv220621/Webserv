@@ -188,7 +188,7 @@ int Request::process_body_chunked(std::string& buf) {
 }
 
 int Request::process_body_length(std::string& buf) {
-	if (m_prev.size() >= m_body_length) {
+	if (m_prev.size() >= static_cast<size_t>(m_body_length)) {
 		m_body = m_prev.substr(0, m_body_length);
 		m_is_done = true;
 		m_is_valid = true;
@@ -200,7 +200,7 @@ int Request::process_body_length(std::string& buf) {
 }
 
 
-const int Request::getState() const {
+int Request::getState() const {
 	return m_current_state;
 }
 const std::string& Request::getMethod() const {
