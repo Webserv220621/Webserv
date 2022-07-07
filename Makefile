@@ -12,7 +12,8 @@ SRCS = $(addprefix $(SRCDIR), $(SRCFILES))
 
 OBJS = $(SRCS:.cpp=.o)
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror
+#TODO: enable -Werror -std=c++98
+CXXFLAGS = -Wall -Wextra
 
 UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)
