@@ -8,7 +8,7 @@
 #include <vector>
 #include <map>
 
-#include "Util.hpp"
+#include "utils/util.hpp"
 
 enum {
     SUCCESS = 0,
@@ -18,7 +18,7 @@ enum {
     ERR_KQ
 };
 
-struct location
+struct Location
 {
     std::string _root;
     std::string _index;
@@ -35,10 +35,12 @@ private:
     std::string m_host;
     int         m_port;
     std::string m_servername;
-    std::map<std::string, location> m_location; //string에 location directory
+    std::map<std::string, Location> m_location; //string에 location directory
     std::map<int, std::string> m_error;
 
 public:
+    typedef std::map<std::string, Location> locations_map_type;
+
     Server():m_fd(0), m_port(0){};
     Server(const Server &other){*this = other;};
     ~Server(){};
@@ -65,8 +67,9 @@ public:
         return m_servername;
     }
 
-    void initLocation(location *loc);
+    void initLocation(Location *loc);
     void parsingServer(std::vector<std::string>::iterator it, std::vector<std::string>::iterator end);
+    const std::map<std::string, Location>& getLocations() const;
     void printServer();// 임시 출력용
 
     int run(int kq);
