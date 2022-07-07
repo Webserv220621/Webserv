@@ -56,6 +56,10 @@ class Response {
 		//
 		std::string getRawString() { return m_raw_string; };
 		void setRawString(std::string ss) { m_raw_string = ss;}
+
+		void makeErrorResponse(int error);// error경우
+		void makeAutoIndex();//autoindex == 1 경우
+		void addDirectory(std::string &body); // directory 출력
 };
 
 #endif

@@ -5,6 +5,7 @@
 #include <sstream> // 파일 입출력
 #include <ios> // file open시 옵션 설정 
 #include <stdio.h> // remove 함수
+#include <dirent.h> // direct 정리 관련
 
 Response::Response () {
     initResponse();
@@ -134,7 +135,7 @@ void             Response::handleGet(void) {
                 else // index.html이 없는데 autoindex가 on이다 => 디렉토리 리스팅
                 {  
                     m_body = "";
-                    // m_body = makeIndexhtml();
+                    makeAutoIndex();
                 }    
             }
         }
@@ -241,13 +242,17 @@ void			Response::deleteMethod(void) {
 	if (is_dir) // case 1 : Url이 디렉토리일 경우 -> 일단 에러 처리 403에러 Forbidden
 	{
         m_code = 403;
+        makeErrorResponse(403);
 	}
 	else // case 2 : Url이 파일인 경우 
     {
        if (remove(path) == 0)
 			m_code = 204;
 		else // -1 리턴
+        {
 			m_code = 403;
+            makeErrorResponse(403);
+        }
 	}
 }
 
@@ -259,10 +264,73 @@ void Response::writeResponseMsg(void) {
     m_responseMsg += getStartLine();
     m_responseMsg += getHeader();
     // 만약 m_code가 에러코드이면 html파일을 읽어 m_body에 넣어줘야 함
+    m_body = "";//
+    makeErrorResponse(m_code);//
     if (m_body != ""){
         m_responseMsg += "\r\n";
         m_responseMsg += writeBody();
     }
+}
+
+
+void Response::addDirectory(std::string &body)
+{
+    std::string m_host = "www.abc.com";//임시
+    std::string m_port = "8080";//
+
+    std::string http_host_port = "http://" + m_host + ":" + m_port;
+    if (http_host_port[http_host_port.length() - 1] != '/')
+        http_host_port += "/";
+    
+    DIR *dir;
+    struct dirent *diread = NULL;
+
+    body += "<h1>Index of /autoindex/</h1><hr><br>";
+    if ((dir = opendir(m_requestPath.c_str())) == NULL) 
+    {
+        return makeErrorResponse(500);//server에서 잘못
+    }
+    while (diread = readdir(dir))
+    {
+        std::string file_name(diread->d_name);
+		if (file_name != "." && file_name != "..")
+		{
+			body += "<a href=" + http_host_port + file_name + " >" + file_name + "</a><br>";//file_name이 주소로 하이퍼링크 연결
+		}
+    }
+    closedir(dir);
+}
+
+void Response::makeAutoIndex()//200 
+{
+    std::string html = "";
+
+    html += "<!DOCTYPE html>\n";
+    html += "<html>\n";
+    html += "<head>\n";
+    html += "</head>\n";
+    html += "<body>\n";
+    addDirectory(html); //directory를 html에 저장
+    html += "</body>\n";
+    html += "</html>\n";
+    html += "\r\n";
+
+    m_body += html;
+}
+
+void Response::makeErrorResponse(int error)
+{
+    std::string html = "";
+	html += "<!DOCTYPE html>\n";
+	html += "<html>\n";
+	html += "<head>\n";
+	html += "</head>\n";
+	html += "<body>";
+	html += "<h1>" + std::to_string(error) + " ERROR PAGE</h1>"; // error ERROR PAGE 출력
+	html += "</body>\n";
+	html += "</html>\n";
+
+	m_body += html;
 }
 
 // 헤더 setting 하는 부분도 필요
