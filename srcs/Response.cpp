@@ -1,10 +1,11 @@
-#include "Response.hpp"
 #include <sys/stat.h> // 파일인지 디렉토리인지 확인
 #include <unistd.h>
 #include <fstream> // 파일 입출력
 #include <sstream> // 파일 입출력
 #include <ios> // file open시 옵션 설정 
 #include <stdio.h> // remove 함수
+#include "Response.hpp"
+#include "common.hpp"
 
 Response::Response () {
     initResponse();

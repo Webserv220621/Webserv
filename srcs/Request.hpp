@@ -14,14 +14,6 @@ enum rq_state {
 	RECV_END
 };
 
-enum response_code {
-	BAD_REQUEST = 400,
-	LENGTH_REQUIRED = 411,
-	URI_TOO_LONG = 414,
-	NOT_IMPLEMENTED = 501,
-	HTTP_VERSION_NOT_SUPPORTED = 505
-};
-
 class Request {
 	private:
 		std::string m_prev;

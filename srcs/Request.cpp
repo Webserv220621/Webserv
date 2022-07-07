@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Request.hpp"
+#include "common.hpp"
 
 Request::Request() {
 	reset();
