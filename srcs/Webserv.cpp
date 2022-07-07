@@ -83,6 +83,9 @@ int Webserv::monitor_events(int kq) {
 					if (! rq.isDone())
 						continue;
 					// 수신 완료됐으면 리스폰스 메시지 생성
+					// 리스폰스를 위해 filepath와 Location 준비
+					const std::string& filepath = rq.getUri().getPath();
+
 					// TODO: 여기를 리스폰스객체에서 처리
 					Response& resp = connection_list[event_fd].response;
 					if (rq.isValid()) {

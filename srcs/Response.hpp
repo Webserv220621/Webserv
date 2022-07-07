@@ -1,51 +1,61 @@
 #ifndef _RESPONSE_HPP_
 # define _RESPONSE_HPP_
 
-#include <string>
-#include <map>
-#include <vector>
-
+#include "Config.hpp"
+#include "Request.hpp"
 
 class Response {
 	private:
-		// 필요한 헤더
-		std::string					m_contentLength;
-		std::string					m_contentType;
-		std::string					m_transferEncoding;
-		// key-코드, val = string 메시지, startline에 이용
-		std::map<int, std::string>	m_error_msg; 
-		//응답 코드 
-		int							m_code;
-		//응답 사이즈
-		size_t						m_size;
-		//최종 리턴 string
-		std::string					m_responseMsg;
-		//response에서 가져와야할 정보
-		std::string					m_requestPath;
-		std::vector<std::string> 	m_allowedMethod;  //임시 자료형
-		bool						m_autoIndex;
-		int							m_errCode; // 에러코드가 405 혹은 413으로 넘어오면? 
+		std::string 				m_raw_string; // 칸리님이 만들어놓은거
 
-		//Server-config 에서 가져와야할 정보
-		std::string m_cgiPath;
-		
-	public :
-		//헤더, payload 작성
-		std::string		getStartLine(int code);
-		std::string		getHeader(void);
-		std::string		getBody(void);
+		std::string 				m_requestPath; // 매핑된 filepath
+		std::string 				m_requestBody; // 있다면
+		size_t						m_bodySize;		// contentlength
+
+		// header
+		std::string					m_contentType;	//header
+		std::string					m_contentLength; // header
+		std::string					m_connection; // 필요시 closed 
+		//
+		int							m_code;
+		bool						m_autoIndex; // 필요시 html 작성
+		std::string					m_responseMsg; // req 메시지 전체
+		std::string					m_body;
+		std::string 				m_cgiPath;
+		std::string					m_method; // req 객체로부터 가져올?
+		std::map<int, std::string>  m_errorMsg;
+
+
+	public:
+		Response();
+		~Response() {};
+		void 			initResponse(void);
+		int 			validCheck(void);
+		void 			runResponse(void);
+		std::string 	writeBody(void);
+		void			writeResponseMsg(void);
+		void			handleGet(void);
+		void			handlePost(void);
+		void			handlePut(void);
 
 		//method
 		void			getMethod(void);
 		void			headMethod(void);
 		void			postMethod(void);
 		void			deleteMethod(void);
-
-		//setter
-		//getter
-
-		//처리
-		int				handlFile(void); //html파일 혹은 패스 읽기, autoindex 체크
-		int				fillBody(std::string content); // 쓸 내용 m_responseMsg 작성
+		void 			putMethod(void);
+		// getter
+		std::string		getStartLine(void);
+		std::string		getHeader(void);
+		int			 	getCode(void);
+		std::string		getMsg(void);
+		// setter
+		void setPath(std::string path);	// test용 임시 
+		void			setMethod(std::string method); // test용 임시 
+		void			setBody(std::string body);
+		//
+		std::string getRawString() { return m_raw_string; };
+		void setRawString(std::string ss) { m_raw_string = ss;}
 };
+
 #endif

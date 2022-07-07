@@ -6,7 +6,8 @@ SRCFILES= ConfigServer.cpp \
 		  main.cpp \
 		  Request.cpp \
 		  Server.cpp \
-		  Util.cpp
+		  Util.cpp \
+		  utils/Uri.cpp
 SRCS = $(addprefix $(SRCDIR), $(SRCFILES))
 
 OBJS = $(SRCS:.cpp=.o)
