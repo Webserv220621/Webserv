@@ -22,7 +22,7 @@ int Request::append_msg(char* str) {
 		else
 			break;
 		if (ret != 0) {
-			m_current_state = RECV_END;
+			m_current_state = ret;
 			m_is_done = true;
 			m_is_valid = false;
 			return ret;

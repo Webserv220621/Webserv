@@ -5,8 +5,8 @@ SRCFILES= ConfigServer.cpp \
 		  kevent_wrapper.cpp \
 		  main.cpp \
 		  Request.cpp \
+		  Response.cpp \
 		  Server.cpp \
-		  Util.cpp \
 		  utils/Uri.cpp \
 		  utils/util.cpp
 SRCS = $(addprefix $(SRCDIR), $(SRCFILES))

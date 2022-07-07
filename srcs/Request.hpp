@@ -46,7 +46,7 @@ class Request {
 		int append_msg(char* buf);
 		bool isDone() const;
 		bool isValid() const;
-		int getState() const;    // 필요없을수도..
+		int getState() const;  // isValid()가 false면 getState()는 보내야할 응답코드를 리턴
 		const std::string& getMethod() const;
 		const Uri& getUri() const;
 		const std::string& getVersion() const;
