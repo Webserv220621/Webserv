@@ -7,6 +7,7 @@
 #include <stdio.h> // remove 함수
 #include <dirent.h> // direct 정리 관련
 #include "common.hpp"
+#include "Cgi.hpp";
 
 Response::Response () {
     //initResponse();
@@ -47,6 +48,8 @@ int              Response::getCode(){ return m_code; }
 std::string		Response::getMsg(void) { return m_responseMsg; }
 
 void Response::initResponse(Server& server, Request& request) {
+    Cgi cgiWeb;
+
     m_requestPath = "";
     m_bodySize = 0;
     m_contentType = "";
@@ -64,6 +67,10 @@ void Response::initResponse(Server& server, Request& request) {
     m_responseMsg = "";
     m_cgiPath =  "";
     m_requestBody = "";
+    m_host =request.getUri().getHost();
+    m_port = request.getUri().getPort();
+    cgiWeb.init(m_location, request);
+    m_cgi = cgiWeb;
 }
 
 std::string		Response::getStartLine(void){
@@ -192,12 +199,43 @@ void             Response::handleGet(void) {
 	
 }
 
+std::vector<std::string> split(std::string input, char delimiter) {
+    std::vector<std::string> answer;
+    std::stringstream ss(input);
+    std::string temp;
+ 
+    while (getline(ss, temp, delimiter)) {
+        answer.push_back(temp);
+    }
+ 
+    return answer;
+}
+
 void			Response::getMethod(void) {
     if (m_cgiPath != "")
-	{
-        // m_code = "Status : " 파싱 
-        // m_contentType = "Content-type: " 파싱
-		// m_body = processCgi();
+	{   
+        std::string retCgi = m_cgi.runCgi(m_cgiPath);
+        std::vector <std::string> result; 
+	    result = split(retCgi, '\n');
+	    for (int i = 0; i < result.size(); i++){
+            if (result[i].find("Status") != std::string::npos)
+            {
+                int start = result[i].find(" ");
+                m_code = stoi(result[i].substr(start, 4));
+            }
+            else if (result[i].find("Content-Type") != std::string::npos)
+            {
+                int start = result[i].find(" ");
+                int end = result[i].find(" ", start);
+                m_contentType = result[i].substr(start, end-3);
+            }
+            else if (result[i] != "\r")
+            {
+                m_body += result[i];
+                if (i != result.size()-1)
+                    m_body += "\n";
+            }
+        }   
 	}
 	else
 		handleGet();
@@ -241,13 +279,32 @@ void Response::handlePut() {
         m_code = 201;
     }
 }
-
+    
 void			Response::postMethod(void) {
     if (m_cgiPath != "")
 	{
-        // m_code = "Status : " 파싱 
-        // m_contentType = "Content-type: " 파싱
-		// m_body = processCgi();
+        std::string retCgi = m_cgi.runCgi(m_cgiPath);
+        std::vector <std::string> result; 
+        result = split(retCgi, '\n');
+        for (int i = 0; i < result.size(); i++){
+            if (result[i].find("Status") != std::string::npos)
+            {
+                int start = result[i].find(" ");
+                m_code = stoi(result[i].substr(start, 4));
+            }
+            else if (result[i].find("Content-Type") != std::string::npos)
+            {
+                int start = result[i].find(" ");
+                int end = result[i].find(" ", start);
+                m_contentType = result[i].substr(start, end-3);
+            }
+            else if (result[i] != "\r")
+            {
+                m_body += result[i];
+                if (i != result.size()-1)
+                    m_body += "\n";
+            }
+        }   
 	}
 	else
 	{
@@ -258,9 +315,28 @@ void			Response::postMethod(void) {
 void			Response::putMethod(void) {
     if (m_cgiPath != "")
 	{
-        // m_code = "Status : " 파싱 
-        // m_contentType = "Content-type: " 파싱
-		// m_body = processCgi();
+        std::string retCgi = m_cgi.runCgi(m_cgiPath);
+        std::vector <std::string> result; 
+	    result = split(retCgi, '\n');
+	    for (int i = 0; i < result.size(); i++){
+            if (result[i].find("Status") != std::string::npos)
+            {
+                int start = result[i].find(" ");
+                m_code = stoi(result[i].substr(start, 4));
+            }
+            else if (result[i].find("Content-Type") != std::string::npos)
+            {
+                int start = result[i].find(" ");
+                int end = result[i].find(" ", start);
+                m_contentType = result[i].substr(start, end-3);
+            }
+            else if (result[i] != "\r")
+            {
+                m_body += result[i];
+                if (i != result.size()-1)
+                    m_body += "\n";
+            }
+        }   
 	}
 	else
 	{
@@ -315,9 +391,6 @@ void Response::writeResponseMsg(void) {
 
 void Response::addDirectory(std::string &body)
 {
-    std::string m_host = "www.abc.com";//임시
-    std::string m_port = "8080";//
-
     std::string http_host_port = "http://" + m_host + ":" + m_port;
     if (http_host_port[http_host_port.length() - 1] != '/')
         http_host_port += "/";

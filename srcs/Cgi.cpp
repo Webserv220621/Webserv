@@ -6,36 +6,25 @@
 //PATH_INFO와 PATH_TRANSLATED, SCRIPT_NAME 주의 
 Cgi::Cgi()
 {
-    // POST localhost:8080/html/abc.bla?v=1
-    //http://lemp.test/test.php/foo/bar.php?v=1
-    m_env["QUERY_STRING"] = "v=1";            // URL, 쿼리부분
-    m_env["REQUEST_METHOD"] = "POST";      //임시
-    m_env["CONTENT_TYPE"] = "txt/plain";  // 리퀘스트 헤더에서 가져와야함 
-    m_env["CONTENT_LENGTH"] = "10";   //요청 바디 사이즈
+}
 
-    m_env["SCRIPT_FILENAME"] = "/Users/rhee/Documents/42seoul/web/abc.bla";  //    /var/www/test.php
-    m_env["SCRIPT_NAME"] = "/html/abc.bla";      //    /test.php
-    m_env["PATH_INFO"] = "/Users/rhee/Documents/42seoul/web/abc.bla";      //   /foo/bar.php
-	m_env["PATH_TRANSLATED"] = "/Users/rhee/Documents/42seoul/web/abc.bla";  // 파일시스템 기반의 경로 
-	m_env["REQUEST_URI"] = "/Users/rhee/Documents/42seoul/web/abc.bla"; ///test.php/foo/bar.php?v=1
-   
+void					Cgi::init(Location location, Request& request){
+	m_requestMsg = request.getBody();
+    m_env["QUERY_STRING"] = request.getUri().getQuery();
+    m_env["REQUEST_METHOD"] = request.getMethod();
+	std::string content_type("Content-Type");
+    m_env["CONTENT_TYPE"] = request.getHeaderValue(content_type); 
+    m_env["CONTENT_LENGTH"] = request.getBody().length();
+    m_env["SCRIPT_FILENAME"] = location._root + request.getUri().getPath();
+    m_env["SCRIPT_NAME"] = request.getUri().getPath(); //실행할 파일 분리 필요 
+    m_env["PATH_INFO"] =  request.getUri().getPath();   ///foo/bar
+	m_env["PATH_TRANSLATED"] = location._root + request.getUri().getPath();
+	m_env["REQUEST_URI"] = request.getUri().getPath() + request.getUri().getQuery();
     m_env["SERVER_PROTOCOL"] = "HTTP/1.1";
     m_env["GATEWAY_INTERFACE"] = "CGI/1.1";
     m_env["SERVER_SOFTWARE"] = "Webserv/1.0";
-
-    m_env["REMOTEADRR"] = "8.0.0.1";
-    m_env["SERVER_PORT"] = "8080";
-    m_env["SERVER_NAME"] = "localhost";
-    //https://www.php.net/manual/en/reserved.variables.server.php
-
-	// m_env["AUTH_TYPE"]
-	// fastcgi_param   DOCUMENT_URI            $document_uri;
-    //$uri는 host부분과 arg부분을 제외한 영역으로 보시면 됩니다. 같은 것으로 document_uri가 있다고 하네요.
-    // fastcgi_param   DOCUMENT_ROOT           $document_root; //웹 상에서 최상위 폴더가 되는 OS 상의 절대경로
-    // fastcgi_param   REMOTE_ADDR             $remote_addr; //접속자의 ip
-    // fastcgi_param   REMOTE_PORT             $remote_port; //접속자의 port
-    // fastcgi_param   SERVER_ADDR             $server_addr; // 서버의 ip
-
+    m_env["SERVER_PORT"] = request.getUri().getPort();
+    m_env["SERVER_NAME"] = request.getUri().getHost();
 }
 
 char					**Cgi::envToChar() {
@@ -62,7 +51,8 @@ std::string		Cgi::runCgi(std::string cgiPath) {
 	env = envToChar();
 	FILE *tmp = tmpfile();
 	int cgiInput = fileno(tmp);
-	write(cgiInput, "1234", 5); // requestMsg 넣어줄 예정
+	write(cgiInput, m_requestMsg.c_str(), m_requestMsg.size());
+	lseek(cgiInput, 0, 0);
 	if (pipe(fd) == -1)
 	{
 		deleteEnv(env);
@@ -96,6 +86,7 @@ std::string		Cgi::runCgi(std::string cgiPath) {
 		}
 	}
 	close(fd[0]);
+	fclose(tmp);
 	deleteEnv(env);
 	return (retCgi);
 }
@@ -110,14 +101,14 @@ void Cgi::deleteEnv(char ** env){
 }
 
 
-// int main(){
-//     Cgi c;
+int main(){
+    Cgi c;
 
-//     std::string buf;
-//     buf = c.runCgi("../html/cgi/cgi_tester");
-// 	std::cout << buf; 
-//     return (0);
-// }
+    std::string buf;
+    buf = c.runCgi("../html/cgi/cgi_tester");
+	std::cout << buf; 
+    return (0);
+}
 // // ----
 // // Status: 200 OK
 // // Content-Type: text/html; charset=utf-8
