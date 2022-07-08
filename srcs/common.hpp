@@ -1,7 +1,6 @@
 #ifndef _COMMON_HPP_
 # define _COMMON_HPP_
 
-
 enum response_code {
 	OK = 200,
 	CREATED = 201,
@@ -16,6 +15,14 @@ enum response_code {
 	URI_TOO_LONG = 414,
 	NOT_IMPLEMENTED = 501,
 	HTTP_VERSION_NOT_SUPPORTED = 505
+};
+
+enum {
+    SUCCESS = 0,
+    ERR_SOCKET,
+    ERR_BIND,
+    ERR_LISTEN,
+    ERR_KQ
 };
 
 #endif

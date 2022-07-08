@@ -4,24 +4,34 @@
 #include "Config.hpp"
 #include "Connection.hpp"
 #include "kevent_wrapper.hpp"
+#include "common.hpp"
 
 int Webserv::run() {
 	int kq = kqueue();
 
+	int ret;
 	// 각 서버를 bind, listen
 	for (int i = 0; i < m_server_cnt; ++i) {
-		if (m_server_list[i].run(kq) != 0) {
-			// TODO: 에러 처리
-			std::cout << i + 1 << "번째 서버 구동 실패" << std::endl;
+		ret = m_server_list[i].run(kq);
+		if (ret != SUCCESS) {
+			if (ret == ERR_SOCKET)
+				std::cout << "cannot create socket for server " << i + 1 << std::endl;
+			else if (ret == ERR_BIND)
+				std::cout << "cannot bind address of server " << i + 1 << std::endl;
+			else if (ret == ERR_LISTEN)
+				std::cout << "server " << i + 1 << " cannot listen for connections" << std::endl;
+			else if (ret == ERR_KQ)
+				std::cout << "can't add server " << i + 1 << " to kqueue" << std::endl;
+
 			while (i-- >= 0)
 				if (m_server_list[i].getFd() != 0)
 					close(m_server_list[i].getFd());
 			return -1;
 		}
 	}
+	for (int i = 0; i < m_server_cnt; ++i)
+		std::cout << "server " << i + 1 << ": " << m_server_list[i].getHost() << ":" << m_server_list[i].getPort() << std::endl;
 	std::cout << "listening..." << std::endl;
-	std::cout << "server cnt = " << m_server_cnt << std::endl;
-	std::cout << m_server_list[0].getHost() << " " << m_server_list[0].getPort() << std::endl;
 
 	if (monitor_events(kq) < 0)
 		return -1;

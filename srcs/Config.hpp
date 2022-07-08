@@ -10,14 +10,6 @@
 
 #include "utils/util.hpp"
 
-enum {
-    SUCCESS = 0,
-    ERR_SOCKET,
-    ERR_BIND,
-    ERR_LISTEN,
-    ERR_KQ
-};
-
 struct Location
 {
     std::string _root;
