@@ -64,6 +64,7 @@ void Response::initResponse(Server& server, Request& request) {
     m_responseMsg = "";
     m_cgiPath =  "";
     m_requestBody = "";
+    m_body = "";
 }
 
 std::string		Response::writeStartLine(void){
@@ -88,7 +89,7 @@ std::string		Response::writeHeader(void)
 
 int Response::validCheck(void) {
     // 각종 리퀘스트에러
-    if (m_code > OK)
+    if (m_code > 399)
         return m_code;
 
     // m_method 가 allowed_method 안에 있는지 체크해서 method not allowed 전송
@@ -326,7 +327,7 @@ void Response::addDirectory(std::string &body)
     {
         return makeErrorResponse(500);//server에서 잘못
     }
-    while (diread = readdir(dir))
+    while ((diread = readdir(dir)))
     {
         std::string file_name(diread->d_name);
 		if (file_name != "." && file_name != "..")
@@ -356,6 +357,9 @@ void Response::makeAutoIndex()//200
 
 void Response::makeErrorResponse(int error)
 {
+    if (error < 400)
+        return ;
+
     std::string html = "";
 	html += "<!DOCTYPE html>\n";
 	html += "<html>\n";
