@@ -34,3 +34,10 @@ std::string checkSemicolon(std::string input)
         input.erase(it);
     return (input);
 }
+
+std::string& trimSpace(std::string& str) {
+    str.erase(0, str.find_first_not_of(' '));
+    str.erase(str.find_last_not_of(' ') + 1);
+    return str;
+
+}

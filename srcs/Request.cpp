@@ -1,6 +1,8 @@
 #include <iostream>
+#include <algorithm>
 #include "Request.hpp"
 #include "common.hpp"
+#include "utils/util.hpp"
 
 Request::Request() {
 	reset();
@@ -65,10 +67,13 @@ int Request::parse_startline(std::string& line) {
 
 // line을 colon단위로 잘라서 key:value로 저장
 int Request::parse_headers(std::string& line) {
-	// TODO: 앞뒤공백자르기, 대소문자구분x
 	size_t pos = line.find(':');
 	std::string key = line.substr(0, pos);
+	key = trimSpace(key);
+	std::transform(key.begin(), key.end(), key.begin(), ::tolower);
 	std::string value = line.substr(pos+1);
+	value = trimSpace(value);
+	std::transform(value.begin(), value.end(), value.begin(), ::tolower);
 	if (key == "host" && m_headers.count("host"))
 		return BAD_REQUEST;
 	if (key == "transfer-encoding" && value != "chunked")
