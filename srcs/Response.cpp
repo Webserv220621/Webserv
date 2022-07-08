@@ -6,9 +6,10 @@
 #include <ios> // file open시 옵션 설정 
 #include <stdio.h> // remove 함수
 #include <dirent.h> // direct 정리 관련
+#include "common.hpp"
 
 Response::Response () {
-    initResponse();
+    //initResponse();
 }
 //------------tmp--------------
 void Response::setPath(std::string path) {
@@ -23,33 +24,46 @@ void			Response::setBody(std::string body){
     m_requestBody = body;
 }
 
+std::map<int, std::string> Response::m_errorMsg = {
+    {100, "Continue"},
+    {200, "OK"},
+	{201, "Created"},
+    {204, "No contetnt"},
+    {301, "Moved Permanently"},
+	{400, "Bad Request"},
+	{403, "Forbidden"},
+	{404, "Not Found"},
+	{405, "Method Not Allowed"},
+    {411, "Length Required"},
+	{413, "Payload Too Large"},
+    {414, "URI Too Long"},
+    {501, "Not Implemented"},
+    {505, "HTTP Version Not Supported"}
+};
 
 //------------tmp--------------
 // getter
 int              Response::getCode(){ return m_code; }
 std::string		Response::getMsg(void) { return m_responseMsg; }
 
-void Response::initResponse() {
+void Response::initResponse(Server& server, Request& request) {
     m_requestPath = "";
     m_bodySize = 0;
     m_contentType = "";
     m_contentLength = "";
     m_connection = ""; 
-    m_code = 0;
-    m_autoIndex = 0;
+    if (request.isValid()) {
+        m_code = 0;
+        m_location = findMatchingLocation(server, request);
+        m_requestPath = m_location._root + request.getUri().getPath();
+        m_autoIndex = m_location._autoindex;
+        m_method = request.getMethod();
+    }
+    else
+        m_code = request.getState();
     m_responseMsg = "";
     m_cgiPath =  "";
-    m_method = "";
     m_requestBody = "";
-    m_errorMsg[100] = "Continue";
-	m_errorMsg[200] = "OK";
-	m_errorMsg[201] = "Created";
-    m_errorMsg[204] = "No contetnt";
-	m_errorMsg[400] = "Bad Request";
-	m_errorMsg[403] = "Forbidden";
-	m_errorMsg[404] = "Not Found";
-	m_errorMsg[405] = "Method Not Allowed";
-	m_errorMsg[413] = "Payload Too Large";
 }
 
 std::string		Response::getStartLine(void){
@@ -73,14 +87,41 @@ std::string		Response::getHeader(void)
 }
 
 int Response::validCheck(void) {
-    if (m_requestPath == "404")
-        return 404;
-    else if (0) // m_method 가 allowed_method 안에 있는지 체크해서 method not allowed 에러 출력
-        return 405;
+    // 각종 리퀘스트에러
+    if (m_code > OK)
+        return m_code;
+
+    // m_method 가 allowed_method 안에 있는지 체크해서 method not allowed 전송
+    bool allowed = false;
+    std::vector<std::string>::iterator it;
+    for (it = m_location._allowmethod.begin(); it != m_location._allowmethod.end(); ++it)
+        if (*it == m_method) {
+            allowed = true;
+            break;
+        }
+    if (allowed == false) {
+        m_code = METHOD_NOT_ALLOWED;
+        return m_code;
+    }
+
     return 0;
 }
 
 void Response::runResponse () {
+    if (validCheck() != 0) {
+        std::cout << "error code=" << m_code << std::endl;
+        m_responseMsg = "you will get " + std::to_string(m_code) + " error page\r\n";
+        //TODO: makeErrorReponse(m_code);
+    }
+    else {
+        std::cout << "request:\n";
+        std::cout << m_method << "   " << m_requestPath << std::endl;
+        m_responseMsg = "we will make response for you\r\n";
+    }
+    // 바디와 헤더를 채워서 m_responseMsg로 만들어주자
+    return;
+
+
 
     if (validCheck() != 0) // 혹시 사전에 에러가 났을 경우, allowed method 등을 체크하여 에러있으면 바로 다음으로
     {
@@ -272,7 +313,6 @@ void Response::writeResponseMsg(void) {
     }
 }
 
-
 void Response::addDirectory(std::string &body)
 {
     std::string m_host = "www.abc.com";//임시
@@ -333,10 +373,41 @@ void Response::makeErrorResponse(int error)
 	m_body += html;
 }
 
+Location Response::findMatchingLocation(Server& s, Request& rq) {
+	const Server::locations_map_type& locations = s.getLocations();
+	Server::locations_map_type::const_reverse_iterator rit;
+	Server::locations_map_type::const_reverse_iterator rit_best_match;
+
+    const std::string& uri = rq.getUri().getPath();
+	bool prefix_found = false;
+	for (rit = locations.rbegin(); rit != locations.rend(); ++rit) {
+		const std::string& prefix = rit->first;
+		if (prefix[0] != '*') {
+			if (prefix_found)
+				continue;
+			size_t pos = uri.find(prefix);
+			if (pos != 0)
+				continue;
+			rit_best_match = rit;
+			prefix_found = true;
+		}
+		else {
+			size_t pos = uri.find(prefix.substr(1));
+			if (pos == std::string::npos)
+				continue;
+			if (pos + prefix.length() - 1 == uri.length()) {
+				rit_best_match = rit;
+				break;
+			}
+		}
+	}
+    return rit_best_match->second;
+}
+
 // 헤더 setting 하는 부분도 필요
 // cgi 처리 부분도 필요
 // url 에러 처리도 필요
-
+/*
 int main() {
     Response rp;
     std::vector<std::string> methods = {"GET", "HEAD", "POST", "DELETE", "PUT"};
@@ -357,3 +428,4 @@ int main() {
     // std::cout << (buf.st_mode & S_IFREG) << std::endl;
     return 0;
 }
+*/

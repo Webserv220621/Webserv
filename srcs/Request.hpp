@@ -14,14 +14,6 @@ enum rq_state {
 	RECV_END
 };
 
-enum response_code {
-	BAD_REQUEST = 400,
-	LENGTH_REQUIRED = 411,
-	URI_TOO_LONG = 414,
-	NOT_IMPLEMENTED = 501,
-	HTTP_VERSION_NOT_SUPPORTED = 505
-};
-
 class Request {
 	private:
 		std::string m_prev;
@@ -33,7 +25,7 @@ class Request {
 		bool m_body_chunked;
 		long m_body_length;
 		bool m_chunk_size_ready;
-		long m_chunk_size;
+		unsigned long m_chunk_size;
 		long m_current_body_size;
 		std::string m_chunk_data;
 		int m_current_state;
@@ -54,13 +46,14 @@ class Request {
 		int append_msg(char* buf);
 		bool isDone() const;
 		bool isValid() const;
-		const int getState() const;
+		int getState() const;  // isValid()가 false면 getState()는 보내야할 응답코드를 리턴
 		const std::string& getMethod() const;
 		const Uri& getUri() const;
 		const std::string& getVersion() const;
 		std::string& getHeaderValue(std::string& key);
 		const std::string& getBody() const;
 		
+		void reset();
 		const std::map<std::string,std::string>& getAllHeaders() const;
 };
 

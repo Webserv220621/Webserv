@@ -1,4 +1,4 @@
-#include "utils/util.hpp"
+#include "util.hpp"
 
 void ft_split(std::string buf, std::vector<std::string> &info)//다른 곳으로 이동 예정
 {

@@ -1,10 +1,9 @@
 #include <iostream>
 #include "Request.hpp"
+#include "common.hpp"
 
 Request::Request() {
-	m_current_state = READING_STARTLINE;
-	m_is_done = false;
-	m_is_valid = false;
+	reset();
 }
 
 Request::~Request() {};
@@ -23,7 +22,7 @@ int Request::append_msg(char* str) {
 		else
 			break;
 		if (ret != 0) {
-			m_current_state = RECV_END;
+			m_current_state = ret;
 			m_is_done = true;
 			m_is_valid = false;
 			return ret;
@@ -49,6 +48,10 @@ int Request::parse_startline(std::string& line) {
 	m_uri = Uri(line.substr(start_pos, next - start_pos));
 	if (m_uri.getLength() > MAX_URI)
 		return URI_TOO_LONG;
+	if (m_uri.getHost() != "" && m_uri.getScheme() != "http")
+		return BAD_REQUEST;
+	if (m_uri.getPath()[0] != '/')
+		return BAD_REQUEST;
 	start_pos = next;
 	while (line[start_pos] == ' ')
 		start_pos++;
@@ -188,7 +191,7 @@ int Request::process_body_chunked(std::string& buf) {
 }
 
 int Request::process_body_length(std::string& buf) {
-	if (m_prev.size() >= m_body_length) {
+	if (m_prev.size() >= static_cast<size_t>(m_body_length)) {
 		m_body = m_prev.substr(0, m_body_length);
 		m_is_done = true;
 		m_is_valid = true;
@@ -200,7 +203,15 @@ int Request::process_body_length(std::string& buf) {
 }
 
 
-const int Request::getState() const {
+bool Request::isDone() const {
+	return m_is_done;
+}
+
+bool Request::isValid() const {
+	return m_is_valid;
+}
+
+int Request::getState() const {
 	return m_current_state;
 }
 const std::string& Request::getMethod() const {
@@ -217,18 +228,28 @@ std::string& Request::getHeaderValue(std::string& key) {
 	return m_headers[key];
 }
 
-const std::map<std::string,std::string>& Request::getAllHeaders() const {
-	return m_headers;
-}
-
 const std::string& Request::getBody() const {
 	return m_body;
 }
 
-bool Request::isDone() const {
-	return m_is_done;
+void Request::reset() {
+	m_prev = "";
+	m_method = "";
+	m_uri.reset();
+	m_version = "";
+	m_headers.clear();
+	m_body = "";
+	m_body_chunked = false;
+	m_body_length = 0;
+	m_chunk_size_ready = false;
+	m_chunk_size = 0;
+	m_current_body_size = 0;
+	m_chunk_data = "";
+	m_current_state = READING_STARTLINE;
+	m_is_done = false;
+	m_is_valid = false;
 }
 
-bool Request::isValid() const {
-	return m_is_valid;
+const std::map<std::string,std::string>& Request::getAllHeaders() const {
+	return m_headers;
 }

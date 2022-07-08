@@ -83,17 +83,9 @@ int Webserv::monitor_events(int kq) {
 					if (! rq.isDone())
 						continue;
 					// 수신 완료됐으면 리스폰스 메시지 생성
-					// 리스폰스를 위해 filepath와 Location 준비
-					const std::string& filepath = rq.getUri().getPath();
-
-					// TODO: 여기를 리스폰스객체에서 처리
 					Response& resp = connection_list[event_fd].response;
-					if (rq.isValid()) {
-						resp.setRawString("your request method:" + rq.getMethod() + "\r\n");
-					}
-					else {
-						resp.setRawString("error code: " + std::to_string(result) + "\r\n");
-					}
+					resp.initResponse(connection_list[event_fd].server, connection_list[event_fd].request);
+					resp.runResponse();
 					// kqueue 에서 C-R 삭제, C-W 추가
 					remove_read_filter(kq, event_fd);
 					add_write_filter(kq, event_fd);
@@ -102,7 +94,7 @@ int Webserv::monitor_events(int kq) {
 			else if (eventlists[i].filter == EVFILT_WRITE)
 			{
 				Response& response = connection_list[event_fd].response;
-				std::string str = response.getRawString();
+				std::string str = response.getMsg();
 				// TODO: 나눠보내기
 				send(event_fd, str.c_str(), str.size(), 0);
 				connection_list.erase(event_fd);

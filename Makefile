@@ -5,15 +5,16 @@ SRCFILES= ConfigServer.cpp \
 		  kevent_wrapper.cpp \
 		  main.cpp \
 		  Request.cpp \
+		  Response.cpp \
 		  Server.cpp \
-		  Util.cpp \
 		  utils/Uri.cpp \
 		  utils/util.cpp
 SRCS = $(addprefix $(SRCDIR), $(SRCFILES))
 
 OBJS = $(SRCS:.cpp=.o)
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror
+#TODO: enable -Werror -std=c++98
+CXXFLAGS = -Wall -Wextra
 
 UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)

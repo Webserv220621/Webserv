@@ -6,7 +6,6 @@
 
 class Response {
 	private:
-		std::string 				m_raw_string; // 칸리님이 만들어놓은거
 
 		std::string 				m_requestPath; // 매핑된 filepath
 		std::string 				m_requestBody; // 있다면
@@ -23,13 +22,20 @@ class Response {
 		std::string					m_body;
 		std::string 				m_cgiPath;
 		std::string					m_method; // req 객체로부터 가져올?
-		std::map<int, std::string>  m_errorMsg;
+		static std::map<int, std::string>  m_errorMsg;
 
+
+		//
+		std::string					m_host;
+		std::string					m_port;
+		Location					m_location;
+
+		Location		findMatchingLocation(Server& server, Request& rq);
 
 	public:
 		Response();
 		~Response() {};
-		void 			initResponse(void);
+		void 			initResponse(Server& server, Request& request);
 		int 			validCheck(void);
 		void 			runResponse(void);
 		std::string 	writeBody(void);
@@ -54,8 +60,6 @@ class Response {
 		void			setMethod(std::string method); // test용 임시 
 		void			setBody(std::string body);
 		//
-		std::string getRawString() { return m_raw_string; };
-		void setRawString(std::string ss) { m_raw_string = ss;}
 
 		void makeErrorResponse(int error);// error경우
 		void makeAutoIndex();//autoindex == 1 경우
