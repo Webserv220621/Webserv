@@ -64,6 +64,7 @@ void Response::initResponse(Server& server, Request& request) {
     m_responseMsg = "";
     m_cgiPath =  "";
     m_requestBody = "";
+    m_body = "";
 }
 
 std::string		Response::getStartLine(void){
@@ -305,8 +306,8 @@ void Response::writeResponseMsg(void) {
     m_responseMsg += getStartLine();
     m_responseMsg += getHeader();
     // 만약 m_code가 에러코드이면 html파일을 읽어 m_body에 넣어줘야 함
-    m_body = "";//
-    makeErrorResponse(m_code);//
+    if (m_code > OK)
+        makeErrorResponse(m_code);//
     if (m_body != ""){
         m_responseMsg += "\r\n";
         m_responseMsg += writeBody();
@@ -330,7 +331,7 @@ void Response::addDirectory(std::string &body)
     {
         return makeErrorResponse(500);//server에서 잘못
     }
-    while (diread = readdir(dir))
+    while ((diread = readdir(dir)))
     {
         std::string file_name(diread->d_name);
 		if (file_name != "." && file_name != "..")
