@@ -38,7 +38,9 @@ std::map<int, std::string> Response::m_errorMsg = {
     {411, "Length Required"},
 	{413, "Payload Too Large"},
     {414, "URI Too Long"},
+    {500, "Internal Server Error"},
     {501, "Not Implemented"},
+    {503, "Service Unavailable"},
     {505, "HTTP Version Not Supported"}
 };
 
@@ -47,6 +49,14 @@ std::map<int, std::string> Response::m_errorMsg = {
 int              Response::getCode(){ return m_code; }
 std::string		Response::getResponseMsg(void) { return m_responseMsg; }
 size_t          Response::getSentBytes() { return m_sent_bytes; }
+bool            Response::isKeepAlive() {
+    // 응답코드가 400, 50x면 연결종료
+    if (m_code == BAD_REQUEST || m_code >= INTERNAL_SERVER_ERROR)
+        return false;
+    // TODO: 요청헤더의 connection이 명시적으로 close면 연결종료
+    // TODO: 요청version이 1.0이고 요청헤더의 connection이 Keep-Alive가 아니면 연결종료
+    return true;
+}
 
 void Response::initResponse(Server& server, Request& request) {
     Cgi cgiWeb;
@@ -125,7 +135,6 @@ void Response::runResponse () {
     if (validCheck() != 0) {
         std::cout << "error code=" << m_code << std::endl;
         makeErrorResponse(m_code);
-        //TODO: 헤더 채우기
     }
     else {
         std::cout << "request:\n";

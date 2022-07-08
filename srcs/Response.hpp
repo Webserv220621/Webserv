@@ -56,6 +56,7 @@ class Response {
 		std::string		getResponseMsg(void);
 		int			 	getCode(void);
 		size_t			getSentBytes(void);
+		bool			isKeepAlive();
 
 		// setter
 		size_t			setSentBytes(size_t n);
