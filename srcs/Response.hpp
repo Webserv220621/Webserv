@@ -40,8 +40,6 @@ class Response {
 		void 			initResponse(Server& server, Request& request);
 		int 			validCheck(void);
 		void 			runResponse(void);
-		std::string 	writeBody(void);
-		void			writeResponseMsg(void);
 		void			handleGet(void);
 		void			handlePost(void);
 		void			handlePut(void);
@@ -52,12 +50,20 @@ class Response {
 		void			postMethod(void);
 		void			deleteMethod(void);
 		void 			putMethod(void);
+
 		// getter
-		std::string		getStartLine(void);
-		std::string		getHeader(void);
+		std::string		getResponseMsg(void);
 		int			 	getCode(void);
-		std::string		getMsg(void);
+
 		// setter
+		std::string		writeStartLine(void);
+		std::string		writeHeader(void);
+		std::string 	writeBody(void);
+		void			writeResponseMsg(void);
+
+
+
+
 		void setPath(std::string path);	// test용 임시 
 		void			setMethod(std::string method); // test용 임시 
 		void			setBody(std::string body);

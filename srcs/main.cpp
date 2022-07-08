@@ -6,8 +6,9 @@ int main(int argc, char *argv[])//혹시 몰라 만든 메인문
     
     if (argc != 2)
     {
-        std::cout << "Invalid arg." << std::endl;
-		return (1);
+        std::cout << "Your input is wrong." << std::endl;
+        std::cout << "it read <default.conf>" << std::endl;
+		web.parsingWebserv(std::string("default.conf"));
     }
     else
     {
