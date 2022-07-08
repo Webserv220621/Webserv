@@ -9,15 +9,31 @@ Cgi::Cgi()
     // POST localhost:8080/html/abc.bla?v=1
     //http://lemp.test/test.php/foo/bar.php?v=1
     m_env["QUERY_STRING"] = "v=1";            // URL, 쿼리부분
+	// request.getQuery()
+
     m_env["REQUEST_METHOD"] = "POST";      //임시
+	// request.getMethod()
+
     m_env["CONTENT_TYPE"] = "txt/plain";  // 리퀘스트 헤더에서 가져와야함 
+	// request.getHeaderValue["content_type"]
+
     m_env["CONTENT_LENGTH"] = "10";   //요청 바디 사이즈
+	// request.getBody().length()
 
     m_env["SCRIPT_FILENAME"] = "/Users/rhee/Documents/42seoul/web/abc.bla";  //    /var/www/test.php
+	// location._root + request.getUri().getPath()  의  절대경로
+
     m_env["SCRIPT_NAME"] = "/html/abc.bla";      //    /test.php
+	// request.getUri().getPath()로부터 execve할 실행파일 분리
+
     m_env["PATH_INFO"] = "/Users/rhee/Documents/42seoul/web/abc.bla";      //   /foo/bar.php
+	// evecve할 실행파일의 절대경로
+
 	m_env["PATH_TRANSLATED"] = "/Users/rhee/Documents/42seoul/web/abc.bla";  // 파일시스템 기반의 경로 
+	// ??
+
 	m_env["REQUEST_URI"] = "/Users/rhee/Documents/42seoul/web/abc.bla"; ///test.php/foo/bar.php?v=1
+	// request.getUri().getPath() + request.getUri().getQuery()
    
     m_env["SERVER_PROTOCOL"] = "HTTP/1.1";
     m_env["GATEWAY_INTERFACE"] = "CGI/1.1";
