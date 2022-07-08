@@ -65,8 +65,8 @@ void Response::initResponse(Server& server, Request& request) {
     else
         m_code = request.getState();
     m_responseMsg = "";
-    m_cgiPath =  "";
-    m_requestBody = "";
+    m_cgiPath =  m_location._cgipath;
+    m_requestBody = request.getBody();
     m_host =request.getUri().getHost();
     m_port = request.getUri().getPort();
     cgiWeb.init(m_location, request);
@@ -92,7 +92,8 @@ std::string		Response::writeHeader(void)
 
 	if (m_contentLength != "")
 		header += "Content-Length: " + m_contentLength + "\r\n";
-	if (m_contentType != "")
+	// FIXME: m_contentType이 공백으로 시작하는 듯
+    if (m_contentType != "")
 		header += "Content-Type: " + m_contentType + "\r\n";
 	if (m_connection != "")
 		header += "Connection: " + m_connection + "\r\n";
@@ -130,19 +131,7 @@ void Response::runResponse () {
         std::cout << "request:\n";
         std::cout << m_method << "   " << m_requestPath << std::endl;
         m_responseMsg = "we will make response for you\r\n";
-    }
-    // 바디와 헤더를 채워서 m_responseMsg로 만들어주자
-    writeResponseMsg();
-    return;
 
-
-
-    if (validCheck() != 0) // 혹시 사전에 에러가 났을 경우, allowed method 등을 체크하여 에러있으면 바로 다음으로
-    {
-        m_code = validCheck();
-    }
-    else
-    {
         if (m_method == "GET")
             getMethod();
         else if (m_method == "HEAD")
@@ -154,6 +143,7 @@ void Response::runResponse () {
         else
             putMethod();
     }
+    writeResponseMsg();
 }
 
 void             Response::handleGet(void) {
