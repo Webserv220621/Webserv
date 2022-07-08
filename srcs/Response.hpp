@@ -32,6 +32,8 @@ class Response {
 
 		Location		findMatchingLocation(Server& server, Request& rq);
 
+		Cgi							m_cgi;
+
 	public:
 		Response();
 		~Response() {};
