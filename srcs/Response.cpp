@@ -46,6 +46,7 @@ std::map<int, std::string> Response::m_errorMsg = {
 // getter
 int              Response::getCode(){ return m_code; }
 std::string		Response::getResponseMsg(void) { return m_responseMsg; }
+size_t          Response::getSentBytes() { return m_sent_bytes; }
 
 void Response::initResponse(Server& server, Request& request) {
     Cgi cgiWeb;
@@ -72,6 +73,11 @@ void Response::initResponse(Server& server, Request& request) {
     cgiWeb.init(m_location, request);
     m_cgi = cgiWeb;
     m_body = "";
+    m_sent_bytes = 0;
+}
+
+size_t          Response::setSentBytes(size_t n) {
+    m_sent_bytes = n;
 }
 
 std::string		Response::writeStartLine(void){

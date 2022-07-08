@@ -18,7 +18,8 @@ class Response {
 		//
 		int							m_code;
 		bool						m_autoIndex; // 필요시 html 작성
-		std::string					m_responseMsg; // req 메시지 전체
+		std::string					m_responseMsg; // resp 메시지 전체
+		size_t						m_sent_bytes; // 어디까지 보냈는지 기억할 변수
 		std::string					m_body;
 		std::string 				m_cgiPath;
 		std::string					m_method; // req 객체로부터 가져올?
@@ -54,8 +55,10 @@ class Response {
 		// getter
 		std::string		getResponseMsg(void);
 		int			 	getCode(void);
+		size_t			getSentBytes(void);
 
 		// setter
+		size_t			setSentBytes(size_t n);
 		std::string		writeStartLine(void);
 		std::string		writeHeader(void);
 		std::string 	writeBody(void);
