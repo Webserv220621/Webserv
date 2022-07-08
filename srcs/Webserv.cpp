@@ -93,12 +93,30 @@ int Webserv::monitor_events(int kq) {
 			}
 			else if (eventlists[i].filter == EVFILT_WRITE)
 			{
+				size_t buf_size = eventlists[i].data;
 				Response& response = connection_list[event_fd].response;
-				std::string str = response.getResponseMsg();
-				// TODO: 나눠보내기
-				send(event_fd, str.c_str(), str.size(), 0);
-				connection_list.erase(event_fd);
-				close(event_fd);
+				const std::string& str = response.getResponseMsg();
+				size_t sent_bytes = response.getSentBytes();
+				int ret;
+
+				// 클라이언트 버퍼가 충분하다면 substr없이 전부 전송
+				if (sent_bytes == 0 && buf_size >= str.length())
+					ret = send(event_fd, str.c_str(), str.length(), 0);
+				else {
+					size_t len = std::min(buf_size, str.length() - sent_bytes);
+					ret = send(event_fd, str.substr(sent_bytes, buf_size).c_str(), len, 0);
+					response.setSentBytes(sent_bytes + buf_size);
+				}
+				if (ret <= 0) {
+					std::cout << "send()에서 매우 심각한 에러" << std::endl;
+					return -1;
+				}
+				if (sent_bytes + buf_size >= str.length()) {
+					// 전송 완료
+					// TODO: 연결유지할지말지check
+					connection_list.erase(event_fd);
+					close(event_fd);
+				}
 			}
 		}
 		// event_count 모두 처리
