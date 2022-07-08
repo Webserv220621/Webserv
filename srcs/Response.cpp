@@ -89,7 +89,7 @@ std::string		Response::writeHeader(void)
 
 int Response::validCheck(void) {
     // 각종 리퀘스트에러
-    if (m_code > 399)
+    if (m_code > 299)
         return m_code;
 
     // m_method 가 allowed_method 안에 있는지 체크해서 method not allowed 전송
@@ -357,7 +357,7 @@ void Response::makeAutoIndex()//200
 
 void Response::makeErrorResponse(int error)
 {
-    if (error < 400)
+    if (error < 300)
         return ;
 
     std::string html = "";
