@@ -94,7 +94,7 @@ int Webserv::monitor_events(int kq) {
 			else if (eventlists[i].filter == EVFILT_WRITE)
 			{
 				Response& response = connection_list[event_fd].response;
-				std::string str = response.getMsg();
+				std::string str = response.getResponseMsg();
 				// TODO: 나눠보내기
 				send(event_fd, str.c_str(), str.size(), 0);
 				connection_list.erase(event_fd);

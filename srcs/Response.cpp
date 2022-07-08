@@ -44,7 +44,7 @@ std::map<int, std::string> Response::m_errorMsg = {
 //------------tmp--------------
 // getter
 int              Response::getCode(){ return m_code; }
-std::string		Response::getMsg(void) { return m_responseMsg; }
+std::string		Response::getResponseMsg(void) { return m_responseMsg; }
 
 void Response::initResponse(Server& server, Request& request) {
     m_requestPath = "";
@@ -67,14 +67,14 @@ void Response::initResponse(Server& server, Request& request) {
     m_body = "";
 }
 
-std::string		Response::getStartLine(void){
+std::string		Response::writeStartLine(void){
     std::string	startLine;
 
     startLine = "HTTP/1.1 " + std::to_string(m_code) + " " + m_errorMsg[m_code] + "\r\n";
     return (startLine);
 }
 
-std::string		Response::getHeader(void)
+std::string		Response::writeHeader(void)
 {
 	std::string	header = "";
 
@@ -89,7 +89,7 @@ std::string		Response::getHeader(void)
 
 int Response::validCheck(void) {
     // 각종 리퀘스트에러
-    if (m_code > OK)
+    if (m_code > 399)
         return m_code;
 
     // m_method 가 allowed_method 안에 있는지 체크해서 method not allowed 전송
@@ -111,8 +111,8 @@ int Response::validCheck(void) {
 void Response::runResponse () {
     if (validCheck() != 0) {
         std::cout << "error code=" << m_code << std::endl;
-        m_responseMsg = "you will get " + std::to_string(m_code) + " error page\r\n";
-        //TODO: makeErrorReponse(m_code);
+        makeErrorResponse(m_code);
+        //TODO: 헤더 채우기
     }
     else {
         std::cout << "request:\n";
@@ -120,6 +120,7 @@ void Response::runResponse () {
         m_responseMsg = "we will make response for you\r\n";
     }
     // 바디와 헤더를 채워서 m_responseMsg로 만들어주자
+    writeResponseMsg();
     return;
 
 
@@ -303,15 +304,10 @@ std::string Response::writeBody () {
 }
 
 void Response::writeResponseMsg(void) {
-    m_responseMsg += getStartLine();
-    m_responseMsg += getHeader();
-    // 만약 m_code가 에러코드이면 html파일을 읽어 m_body에 넣어줘야 함
-    if (m_code > OK)
-        makeErrorResponse(m_code);//
-    if (m_body != ""){
-        m_responseMsg += "\r\n";
-        m_responseMsg += writeBody();
-    }
+    m_responseMsg += writeStartLine();
+    m_responseMsg += writeHeader();
+    if (m_body != "")
+        m_responseMsg += "\r\n" + m_body;
 }
 
 void Response::addDirectory(std::string &body)
@@ -361,6 +357,9 @@ void Response::makeAutoIndex()//200
 
 void Response::makeErrorResponse(int error)
 {
+    if (error < 400)
+        return ;
+
     std::string html = "";
 	html += "<!DOCTYPE html>\n";
 	html += "<html>\n";
