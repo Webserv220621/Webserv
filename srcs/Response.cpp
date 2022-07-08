@@ -7,7 +7,6 @@
 #include <stdio.h> // remove 함수
 #include <dirent.h> // direct 정리 관련
 #include "common.hpp"
-#include "Cgi.hpp";
 
 Response::Response () {
     //initResponse();

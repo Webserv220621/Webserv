@@ -3,6 +3,7 @@
 
 #include "Config.hpp"
 #include "Request.hpp"
+#include "Cgi.hpp"
 
 class Response {
 	private:

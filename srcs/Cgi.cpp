@@ -1,8 +1,9 @@
-#include "Cgi.hpp"
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/wait.h>
+#include "Cgi.hpp"
 //PATH_INFO와 PATH_TRANSLATED, SCRIPT_NAME 주의 
 Cgi::Cgi()
 {
@@ -100,7 +101,7 @@ void Cgi::deleteEnv(char ** env){
 	}
 }
 
-
+/*
 int main(){
     Cgi c;
 
@@ -109,6 +110,7 @@ int main(){
 	std::cout << buf; 
     return (0);
 }
+*/
 // // ----
 // // Status: 200 OK
 // // Content-Type: text/html; charset=utf-8
