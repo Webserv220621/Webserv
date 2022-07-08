@@ -94,7 +94,7 @@ int Webserv::monitor_events(int epoll_fd) {
 			else if (eventlists[i].events == EPOLLOUT)
 			{
 				Response& response = connection_list[event_fd].response;
-				std::string str = response.getMsg();
+				std::string str = response.getResponseMsg();
 				// TODO: 나눠보내기
 				send(event_fd, str.c_str(), str.size(), 0);
 				connection_list.erase(event_fd);
