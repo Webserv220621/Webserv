@@ -1,8 +1,9 @@
-#include "Cgi.hpp"
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/wait.h>
+#include "Cgi.hpp"
 //PATH_INFO와 PATH_TRANSLATED, SCRIPT_NAME 주의 
 Cgi::Cgi()
 {
@@ -12,9 +13,14 @@ void					Cgi::init(Location location, Request& request){
 	m_requestMsg = request.getBody();
     m_env["QUERY_STRING"] = request.getUri().getQuery();
     m_env["REQUEST_METHOD"] = request.getMethod();
-	std::string content_type("Content-Type");
-    m_env["CONTENT_TYPE"] = request.getHeaderValue(content_type); 
-    m_env["CONTENT_LENGTH"] = request.getBody().length();
+    m_env["CONTENT_TYPE"] = request.getHeaderValue("Content-Type");
+
+	// FIXME: getBody().length() 가 안됐던 이유는 우변이 size_t이기 때문이었습니다.
+	// 둘 중 뭐가 나을지는 뭐가 나을지는 아직 잘 모르겠는데, content-length는 리퀘스트에 있을수도 있고 없을수도 있으니까(transfer-encoding=chunked)
+	// body length를 to_string하는 게 낫지 않을까 싶어요
+    m_env["CONTENT_LENGTH"] = request.getHeaderValue("Content-Length");
+    //m_env["CONTENT_LENGTH"] = std::to_string(request.getBody().length());
+
     m_env["SCRIPT_FILENAME"] = location._root + request.getUri().getPath();
     m_env["SCRIPT_NAME"] = request.getUri().getPath(); //실행할 파일 분리 필요 
     m_env["PATH_INFO"] =  request.getUri().getPath();   ///foo/bar
@@ -100,7 +106,7 @@ void Cgi::deleteEnv(char ** env){
 	}
 }
 
-
+/*
 int main(){
     Cgi c;
 
@@ -109,6 +115,7 @@ int main(){
 	std::cout << buf; 
     return (0);
 }
+*/
 // // ----
 // // Status: 200 OK
 // // Content-Type: text/html; charset=utf-8

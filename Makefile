@@ -7,6 +7,7 @@ SRCFILES= ConfigServer.cpp \
 		  Request.cpp \
 		  Response.cpp \
 		  Server.cpp \
+		  Cgi.cpp \
 		  utils/Uri.cpp \
 		  utils/util.cpp
 SRCS = $(addprefix $(SRCDIR), $(SRCFILES))

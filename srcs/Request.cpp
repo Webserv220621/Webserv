@@ -224,7 +224,7 @@ const std::string& Request::getVersion() const {
 	return m_version;
 }
 
-std::string& Request::getHeaderValue(std::string& key) {
+std::string& Request::getHeaderValue(const std::string& key) {
 	return m_headers[key];
 }
 

@@ -50,7 +50,7 @@ class Request {
 		const std::string& getMethod() const;
 		const Uri& getUri() const;
 		const std::string& getVersion() const;
-		std::string& getHeaderValue(std::string& key);
+		std::string& getHeaderValue(const std::string& key);
 		const std::string& getBody() const;
 		
 		void reset();
