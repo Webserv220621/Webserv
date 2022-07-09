@@ -62,9 +62,9 @@ void Response::initResponse(Server& server, Request& request) {
 
     m_requestPath = "";
     m_bodySize = 0;
-    m_contentType = "";
+    m_contentType = "text/plain";
     m_contentLength = "";
-    m_connection = "Keep Alive"; 
+    m_connection = "Keep-Alive"; 
     if (request.isValid()) {
         m_code = 0;
         m_location = findMatchingLocation(server, request);
@@ -83,6 +83,7 @@ void Response::initResponse(Server& server, Request& request) {
     m_cgi = cgiWeb;
     m_body = "";
     m_sent_bytes = 0;
+    m_indexFile = m_location._index;
 }
 
 size_t          Response::setSentBytes(size_t n) {
@@ -100,6 +101,8 @@ std::string		Response::writeHeader(void)
 {
 	std::string	header = "";
 
+    if (m_body != "")
+        m_contentLength = m_body.size();
 	if (m_contentLength != "")
 		header += "Content-Length: " + m_contentLength + "\r\n";
 	// FIXME: m_contentType이 공백으로 시작하는 듯
@@ -174,10 +177,14 @@ void             Response::handleGet(void) {
     {
         if (is_dir) // case 1 : Url이 디렉토리일 경우
         {
-            indexHtml = m_requestPath + "/index.html";
+            indexHtml = m_requestPath + m_indexFile; // <- 주의 
             if (access(indexHtml.c_str(), F_OK) == 0) // 그 디렉토리에index.html이 있다면 => index.html
             {
-                // file.open("index.html", );
+                readFile.open(indexHtml, std::ifstream::in);
+                readBuf << readFile.rdbuf();
+                m_body = readBuf.str();
+                readFile.close();
+                m_code = 200;
                 m_contentType = "txt/html";
             }
             else
@@ -221,13 +228,9 @@ void			Response::getMethod(void) {
     if (m_cgiPath != "")
 	{   
         std::string retCgi = m_cgi.runCgi(m_cgiPath);
-        std::vector <std::string> result; 
+        std::vector <std::string> result;
 	    result = split(retCgi, '\n');
 	    for (int i = 0; i < result.size(); i++){
-      
-      
-      
-      
             if (result[i].find("Status") != std::string::npos)
             {
                 int start = result[i].find(" ");
@@ -260,7 +263,9 @@ void Response::handlePost() {
     const char  *path;
     std::ofstream writeFile; 
     
-    //html/acb/test.txt -> 에러처리 
+    //html/tet.txt
+    //html
+    //html/acb/test.txt -> 에러처리?
 
     path = m_requestPath.c_str();
     writeFile.open(path, std::ios_base::out | std::ios_base::trunc);
@@ -291,6 +296,11 @@ void Response::handlePut() {
 }
     
 void			Response::postMethod(void) {
+    if (m_requestBody == "")
+    {
+        getMethod();
+        return ;
+    }
     if (m_cgiPath != "")
 	{
         std::string retCgi = m_cgi.runCgi(m_cgiPath);
@@ -300,7 +310,7 @@ void			Response::postMethod(void) {
             if (result[i].find("Status") != std::string::npos)
             {
                 int start = result[i].find(" ");
-                m_code = stoi(result[i].substr(start, 4));
+                m_code = stoi(result[i].substr(start, 4)); // stoi c98 주의#######
             }
             else if (result[i].find("Content-Type") != std::string::npos)
             {
@@ -396,10 +406,11 @@ void Response::writeResponseMsg(void) {
 
 void Response::addDirectory(std::string &body)
 {
-    std::string http_host_port = "http://" + m_host + ":" + m_port;
+    std::string http_host_port = "http://" + m_host;
+    if (m_port != "")
+        http_host_port += ":" + m_port;
     if (http_host_port[http_host_port.length() - 1] != '/')
         http_host_port += "/";
-    
     DIR *dir;
     struct dirent *diread = NULL;
 
@@ -435,6 +446,7 @@ void Response::makeAutoIndex()//200
 
     m_contentLength = std::to_string(html.size());//
     m_body += html;
+    m_contentType = "text/html";
 }
 
 void Response::makeErrorResponse(int error)
@@ -454,8 +466,9 @@ void Response::makeErrorResponse(int error)
 	html += "</body>\n";
 	html += "</html>\n";
 
-    m_contentLength = std::to_string(html.size());//
+    // m_contentLength = std::to_string(html.size());//
 	m_body += html;
+    m_contentType = "text/html";
 }
 
 Location Response::findMatchingLocation(Server& s, Request& rq) {

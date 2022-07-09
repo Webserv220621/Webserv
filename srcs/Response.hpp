@@ -25,6 +25,7 @@ class Response {
 		std::string 				m_cgiPath;
 		std::string					m_method; // req 객체로부터 가져올?
 		static std::map<int, std::string>  m_errorMsg;
+		std::string					m_indexFile; // location에서 가져오는 index default 파일
 
 
 		//
