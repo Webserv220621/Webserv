@@ -4,24 +4,34 @@
 #include "Config.hpp"
 #include "Connection.hpp"
 #include "kevent_wrapper.hpp"
+#include "common.hpp"
 
 int Webserv::run() {
 	int epoll_fd = epoll_create(1024);
 
+	int ret;
 	// 각 서버를 bind, listen
 	for (int i = 0; i < m_server_cnt; ++i) {
-		if (m_server_list[i].run(epoll_fd) != 0) {
-			// TODO: 에러 처리
-			std::cout << i + 1 << "번째 서버 구동 실패" << std::endl;
+		ret = m_server_list[i].run(epoll_fd);
+		if (ret != SUCCESS) {
+			if (ret == ERR_SOCKET)
+				std::cout << "cannot create socket for server " << i + 1 << std::endl;
+			else if (ret == ERR_BIND)
+				std::cout << "cannot bind address of server " << i + 1 << std::endl;
+			else if (ret == ERR_LISTEN)
+				std::cout << "server " << i + 1 << " cannot listen for connections" << std::endl;
+			else if (ret == ERR_KQ)
+				std::cout << "can't add server " << i + 1 << " to kqueue" << std::endl;
+
 			while (i-- >= 0)
 				if (m_server_list[i].getFd() != 0)
 					close(m_server_list[i].getFd());
 			return -1;
 		}
 	}
+	for (int i = 0; i < m_server_cnt; ++i)
+		std::cout << "server " << i + 1 << ": " << m_server_list[i].getHost() << ":" << m_server_list[i].getPort() << std::endl;
 	std::cout << "listening..." << std::endl;
-	std::cout << "server cnt = " << m_server_cnt << std::endl;
-	std::cout << m_server_list[0].getHost() << " " << m_server_list[0].getPort() << std::endl;
 
 	if (monitor_events(epoll_fd) < 0)
 		return -1;
@@ -77,7 +87,7 @@ int Webserv::monitor_events(int epoll_fd) {
 				}
 				else {
 					// 커넥션객체 찾아서 리퀘스트객체에게 전달
-					buf[rdbytes] = '\0';
+					buf[ret] = '\0';
 					Request& rq = connection_list[event_fd].request;
 					int result = rq.append_msg(buf);
 					if (! rq.isDone())
@@ -97,8 +107,23 @@ int Webserv::monitor_events(int epoll_fd) {
 				std::string str = response.getResponseMsg();
 				// TODO: 나눠보내기
 				send(event_fd, str.c_str(), str.size(), 0);
+				// 전송 완료. C-W 삭제.
+				// 연결유지할거면 리퀘스트객체 초기화 후 C-R 추가.
+// TODO: needs test on MacOS
+#if 0
+				remove_write_filter(epoll_fd, event_fd);
+				if (response.isKeepAlive()) {
+					connection_list[event_fd].request.reset();
+					add_read_filter(epoll_fd, event_fd);
+				}
+				else {
+					connection_list.erase(event_fd);
+					close(event_fd);
+				}
+#else
 				connection_list.erase(event_fd);
 				close(event_fd);
+#endif
 			}
 		}
 		// event_count 모두 처리
