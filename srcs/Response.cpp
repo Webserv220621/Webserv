@@ -55,7 +55,7 @@ void Response::initResponse(Server& server, Request& request) {
     m_bodySize = 0;
     m_contentType = "";
     m_contentLength = "";
-    m_connection = ""; 
+    m_connection = "Keep Alive"; 
     if (request.isValid()) {
         m_code = 0;
         m_location = findMatchingLocation(server, request);
@@ -435,6 +435,7 @@ void Response::makeAutoIndex()//200
     html += "</html>\n";
     html += "\r\n";
 
+    m_contentLength = std::to_string(html.size());//
     m_body += html;
 }
 
@@ -442,6 +443,8 @@ void Response::makeErrorResponse(int error)
 {
     if (error < 300)
         return ;
+    if (error == 400 || error >= 500)
+        m_connection = "Close";
 
     std::string html = "";
 	html += "<!DOCTYPE html>\n";
@@ -453,6 +456,7 @@ void Response::makeErrorResponse(int error)
 	html += "</body>\n";
 	html += "</html>\n";
 
+    m_contentLength = std::to_string(html.size());//
 	m_body += html;
 }
 
