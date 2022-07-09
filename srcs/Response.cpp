@@ -102,7 +102,7 @@ std::string		Response::writeHeader(void)
 	std::string	header = "";
 
     if (m_body != "")
-        m_contentLength = m_body.size();
+        m_contentLength = std::to_string(m_body.size());
 	if (m_contentLength != "")
 		header += "Content-Length: " + m_contentLength + "\r\n";
 	// FIXME: m_contentType이 공백으로 시작하는 듯
@@ -142,7 +142,6 @@ void Response::runResponse () {
     else {
         std::cout << "request:\n";
         std::cout << m_method << "   " << m_requestPath << std::endl;
-        m_responseMsg = "we will make response for you\r\n";
 
         if (m_method == "GET")
             getMethod();
@@ -209,7 +208,6 @@ void             Response::handleGet(void) {
             m_code = 200;
         }
     }
-	
 }
 
 std::vector<std::string> split(std::string input, char delimiter) {
