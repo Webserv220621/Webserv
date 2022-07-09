@@ -102,7 +102,7 @@ std::string		Response::writeHeader(void)
 	std::string	header = "";
 
     if (m_body != "")
-        m_contentLength = m_body.size();
+        m_contentLength = std::to_string(m_body.size());
 	if (m_contentLength != "")
 		header += "Content-Length: " + m_contentLength + "\r\n";
 	// FIXME: m_contentType이 공백으로 시작하는 듯
@@ -110,6 +110,8 @@ std::string		Response::writeHeader(void)
 		header += "Content-Type: " + m_contentType + "\r\n";
 	if (m_connection != "")
 		header += "Connection: " + m_connection + "\r\n";
+    if (m_code == 301)
+        header = header + "Location: " + "/directory/" + "\r\n";
 	return (header);
 }
 
@@ -142,8 +144,7 @@ void Response::runResponse () {
     else {
         std::cout << "request:\n";
         std::cout << m_method << "   " << m_requestPath << std::endl;
-        m_responseMsg = "we will make response for you\r\n";
-
+        // m_responseMsg = "we will make response for you\r\n";
         if (m_method == "GET")
             getMethod();
         else if (m_method == "HEAD")
@@ -171,8 +172,11 @@ void             Response::handleGet(void) {
     stat(path,&buf);
     is_dir = buf.st_mode & S_IFDIR;
     is_exist = access(path, F_OK); // F_OK 옵션은 파일존재여부만 확인
-    if (is_exist == -1)
-        m_code = 404;
+    if (is_exist == -1){
+        // locaiton 키로 directory가 있으면 응답으로 보내주면?
+        m_code = 301;
+        makeErrorResponse(301);
+    }
     else
     {
         if (is_dir) // case 1 : Url이 디렉토리일 경우
@@ -209,7 +213,6 @@ void             Response::handleGet(void) {
             m_code = 200;
         }
     }
-	
 }
 
 std::vector<std::string> split(std::string input, char delimiter) {
