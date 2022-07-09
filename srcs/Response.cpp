@@ -357,7 +357,7 @@ void Response::makeErrorResponse(int error)
 {
     if (error < 300)
         return ;
-    if (error == 400 | error >= 500)
+    if (error == 400 || error >= 500)
         m_connection = "Close";
 
     std::string html = "";
