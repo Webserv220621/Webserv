@@ -170,8 +170,10 @@ void             Response::handleGet(void) {
     stat(path,&buf);
     is_dir = buf.st_mode & S_IFDIR;
     is_exist = access(path, F_OK); // F_OK 옵션은 파일존재여부만 확인
-    if (is_exist == -1)
+    if (is_exist == -1) {
         m_code = 404;
+        makeErrorResponse(404);
+    }
     else
     {
         if (is_dir) // case 1 : Url이 디렉토리일 경우
