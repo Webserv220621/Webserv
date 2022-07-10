@@ -108,16 +108,14 @@ std::string		Response::writeHeader(void)
 {
 	std::string	header = "";
 
-    if (m_body != "")
-        m_contentLength = std::to_string(m_body.size());
-	if (m_contentLength != "")
-		header += "Content-Length: " + m_contentLength + "\r\n";
+	header += "Content-Length: " + std::to_string(m_body.size()) + "\r\n";
 	// FIXME: m_contentType이 공백으로 시작하는 듯
     if (m_contentType != "")
 		header += "Content-Type: " + m_contentType + "\r\n";
 	if (m_connection != "")
 		header += "Connection: " + m_connection + "\r\n";
-	return (header);
+	header += "\r\n";
+    return (header);
 }
 
 int Response::validCheck(void) {
@@ -259,6 +257,7 @@ void			Response::getMethod(void) {
 }
 
 void			Response::headMethod(void) {
+    //FIXME: HEAD요청일 때도 content_length는 GET요청일 때와 동일할 것
     getMethod();
     m_body = "";
 }
@@ -408,7 +407,7 @@ void Response::writeResponseMsg(void) {
     prn_prepend(m_responseMsg, ">>> ");
     std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>\n\n" << std::endl;
     if (m_body != "")
-        m_responseMsg += "\r\n" + m_body;
+        m_responseMsg += m_body;
 
 }
 
