@@ -71,6 +71,8 @@ void Response::initResponse(Server& server, Request& request) {
     if (request.isValid()) {
         m_code = 0;
         m_location = findMatchingLocation(server, request);
+        if (request.getBody().size() > m_location._bodysize)
+            m_code = 413;
         const std::string& uripath = request.getUri().getPath();
         if (m_location._prefix.length() > 1)
             m_requestPath = m_location._root + uripath.substr(m_location._prefix.length());
@@ -125,7 +127,6 @@ int Response::validCheck(void) {
     // 각종 리퀘스트에러
     if (m_code > 299)
         return m_code;
-
     // m_method 가 allowed_method 안에 있는지 체크해서 method not allowed 전송
     bool allowed = false;
     std::vector<std::string>::iterator it;
@@ -169,20 +170,38 @@ void             Response::handleGet(void) {
     std::string indexHtml;
     std::ifstream readFile; 
     std::stringstream readBuf;
-    
+    int         hasSlash;
+    // response 객체 생성될 때 파일인지 디렉토리인지 구분하는 변수 m_type 을 줘서 
+    // 만약 is_exit가 true로 나와도 is_dir와 m_type이 일치하지 않으면 404에러를 내도록 
+
+    hasSlash = 0;
+    std::cout<< "checkhasSlash : " << m_requestPath[m_requestPath.size()-1] << std::endl;
+    if (m_requestPath[m_requestPath.size()-1] == '/'){
+        hasSlash = 1;
+    }
     path = m_requestPath.c_str();
     stat(path,&buf);
     is_dir = buf.st_mode & S_IFDIR;
     is_exist = access(path, F_OK); // F_OK 옵션은 파일존재여부만 확인
+    std::cout << "path : " << path << std::endl;
+    std::cout << "is_exist(-1 404) : "<< is_exist << std::endl;
     if (is_exist == -1) {
         m_code = 404;
         makeErrorResponse(404);
     }
     else
     {
+        // std::cout <<"debug: " << hasSlash<< ", " << is_dir << std::endl;
+        // if ((hasSlash == 0 && is_dir) || (hasSlash == 1 && is_dir == 0))
+        // {
+        //     m_code = 404;
+        //     makeErrorResponse(404);
+        //     return ;
+        // }
         if (is_dir) // case 1 : Url이 디렉토리일 경우
         {
-            indexHtml = m_requestPath + m_indexFile; // <- 주의 
+            indexHtml = m_requestPath + "/" + m_indexFile; // <- 주의 
+            std::cout << "indexHtml: " << indexHtml << std::endl;
             if (access(indexHtml.c_str(), F_OK) == 0) // 그 디렉토리에index.html이 있다면 => index.html
             {
                 readFile.open(indexHtml, std::ifstream::in);
@@ -196,7 +215,8 @@ void             Response::handleGet(void) {
             {
                 if (m_autoIndex == 0) //index.html이 없는데 autoindex가 off다 => 403 Forbidden
                 {
-                    m_code = 403;
+                    m_code = 404;
+                    makeErrorResponse(404);
                 }
                 else // index.html이 없는데 autoindex가 on이다 => 디렉토리 리스팅
                 {
