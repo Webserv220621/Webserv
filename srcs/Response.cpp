@@ -92,6 +92,12 @@ void Response::initResponse(Server& server, Request& request) {
     m_requestBody = request.getBody();
     m_host =request.getUri().getHost();
     m_port = request.getUri().getPort();
+    // uri에 host, port 정보가 없으면 server 정보를 적용
+    // TODO: servername이 있으면 servername 우선
+    if (m_host == "")
+        m_host = server.getHost();
+    if (m_port == "")
+        m_port = std::to_string(server.getPort());
     cgiWeb.init(m_location, request);
     m_cgi = cgiWeb;
     m_body = "";
