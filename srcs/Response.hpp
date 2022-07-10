@@ -31,6 +31,8 @@ class Response {
 		//
 		std::string					m_host;
 		std::string					m_port;
+		std::string					m_uripath;
+		std::string					m_query;
 		Location					m_location;
 
 		Location		findMatchingLocation(Server& server, Request& rq);

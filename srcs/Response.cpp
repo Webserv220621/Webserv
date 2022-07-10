@@ -74,13 +74,14 @@ void Response::initResponse(Server& server, Request& request) {
         if (m_location._bodysize && request.getBody().size() > m_location._bodysize){
             m_code = 413;
         }
-        const std::string& uripath = request.getUri().getPath();
+        m_uripath = request.getUri().getPath();
         if (m_location._prefix[0] == '*')
-            m_requestPath = uripath;
+            m_requestPath = m_uripath;
         else if (m_location._prefix.length() > 1)
-            m_requestPath = m_location._root + uripath.substr(m_location._prefix.length());
+            m_requestPath = m_location._root + m_uripath.substr(m_location._prefix.length());
         else
             m_requestPath = m_location._root + request.getUri().getPath();
+        m_query = request.getUri().getQuery();
         m_autoIndex = m_location._autoindex;
         m_method = request.getMethod();
     }
@@ -122,6 +123,8 @@ std::string		Response::writeHeader(void)
 		header += "Content-Type: " + m_contentType + "\r\n";
 	if (m_connection != "")
 		header += "Connection: " + m_connection + "\r\n";
+    if (m_code == MOVED_PERMANENTLY)
+        header += "Location: http://" + m_host + ":" + m_port + m_uripath + "/" + m_query + "\r\n";
 	header += "\r\n";
     return (header);
 }
@@ -206,8 +209,15 @@ void             Response::handleGet(void) {
         //     makeErrorResponse(404);
         //     return ;
         // }
-        if (is_dir) // case 1 : Url이 디렉토리일 경우
+        if (is_dir) // case 1 : 서빙중인 리소스가 디렉토리일 경우
         {
+            if (*m_requestPath.rbegin() != '/') {
+                // 요청uri가 파일을 찾고 있다면 301 리디렉션
+                m_code = MOVED_PERMANENTLY;
+                makeErrorResponse(m_code);
+                // Location 헤더는 writeHeader() 단계에서 처리
+                return;
+            }
             indexHtml = m_requestPath + "/" + m_indexFile; // <- 주의 
             std::cout << "indexHtml: " << indexHtml << std::endl;
             if (access(indexHtml.c_str(), F_OK) == 0) // 그 디렉토리에index.html이 있다면 => index.html
@@ -234,7 +244,7 @@ void             Response::handleGet(void) {
                 }    
             }
         }
-        else // case 2 : Url이 파일인 경우 
+        else // case 2 : 리소스가 파일인 경우
         {
             readFile.open(path, std::ifstream::in);
             readBuf << readFile.rdbuf();
