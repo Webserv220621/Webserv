@@ -61,7 +61,7 @@ class Response {
 		bool			isKeepAlive();
 
 		// setter
-		size_t			setSentBytes(size_t n);
+		void			setSentBytes(size_t n);
 		std::string		writeStartLine(void);
 		std::string		writeHeader(void);
 		std::string 	writeBody(void);

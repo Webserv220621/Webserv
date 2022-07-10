@@ -24,24 +24,27 @@ void			Response::setBody(std::string body){
     m_requestBody = body;
 }
 
-std::map<int, std::string> Response::m_errorMsg = {
-    {100, "Continue"},
-    {200, "OK"},
-	{201, "Created"},
-    {204, "No contetnt"},
-    {301, "Moved Permanently"},
-	{400, "Bad Request"},
-	{403, "Forbidden"},
-	{404, "Not Found"},
-	{405, "Method Not Allowed"},
-    {411, "Length Required"},
-	{413, "Payload Too Large"},
-    {414, "URI Too Long"},
-    {500, "Internal Server Error"},
-    {501, "Not Implemented"},
-    {503, "Service Unavailable"},
-    {505, "HTTP Version Not Supported"}
-};
+std::map<int, std::string>& initErrorMap() {
+static std::map<int, std::string> tmp;
+	tmp[100] = "Continue";
+	tmp[200] = "OK";
+	tmp[201] = "Created";
+	tmp[204] = "No contetnt";
+	tmp[301] = "Moved Permanently";
+	tmp[400] = "Bad Request";
+	tmp[403] = "Forbidden";
+	tmp[404] = "Not Found";
+	tmp[405] = "Method Not Allowed";
+	tmp[411] = "Length Required";
+	tmp[413] = "Payload Too Large";
+	tmp[414] = "URI Too Long";
+	tmp[500] = "Internal Server Error";
+	tmp[501] = "Not Implemented";
+	tmp[503] = "Service Unavailable";
+	tmp[505] = "HTTP Version Not Supported";
+	return tmp;
+}
+std::map<int, std::string> Response::m_errorMsg = initErrorMap();
 
 //------------tmp--------------
 // getter
@@ -93,7 +96,7 @@ void Response::initResponse(Server& server, Request& request) {
     std::cout << " targetPath: " << m_requestPath << std::endl;
 }
 
-size_t          Response::setSentBytes(size_t n) {
+void          Response::setSentBytes(size_t n) {
     m_sent_bytes = n;
 }
 
