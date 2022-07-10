@@ -24,24 +24,27 @@ void			Response::setBody(std::string body){
     m_requestBody = body;
 }
 
-std::map<int, std::string> Response::m_errorMsg = {
-    {100, "Continue"},
-    {200, "OK"},
-	{201, "Created"},
-    {204, "No contetnt"},
-    {301, "Moved Permanently"},
-	{400, "Bad Request"},
-	{403, "Forbidden"},
-	{404, "Not Found"},
-	{405, "Method Not Allowed"},
-    {411, "Length Required"},
-	{413, "Payload Too Large"},
-    {414, "URI Too Long"},
-    {500, "Internal Server Error"},
-    {501, "Not Implemented"},
-    {503, "Service Unavailable"},
-    {505, "HTTP Version Not Supported"}
-};
+std::map<int, std::string>& initErrorMap() {
+static std::map<int, std::string> tmp;
+	tmp[100] = "Continue";
+	tmp[200] = "OK";
+	tmp[201] = "Created";
+	tmp[204] = "No contetnt";
+	tmp[301] = "Moved Permanently";
+	tmp[400] = "Bad Request";
+	tmp[403] = "Forbidden";
+	tmp[404] = "Not Found";
+	tmp[405] = "Method Not Allowed";
+	tmp[411] = "Length Required";
+	tmp[413] = "Payload Too Large";
+	tmp[414] = "URI Too Long";
+	tmp[500] = "Internal Server Error";
+	tmp[501] = "Not Implemented";
+	tmp[503] = "Service Unavailable";
+	tmp[505] = "HTTP Version Not Supported";
+	return tmp;
+}
+std::map<int, std::string> Response::m_errorMsg = initErrorMap();
 
 //------------tmp--------------
 // getter
@@ -68,7 +71,11 @@ void Response::initResponse(Server& server, Request& request) {
     if (request.isValid()) {
         m_code = 0;
         m_location = findMatchingLocation(server, request);
-        m_requestPath = m_location._root + request.getUri().getPath();
+        const std::string& uripath = request.getUri().getPath();
+        if (m_location._prefix.length() > 1)
+            m_requestPath = m_location._root + uripath.substr(m_location._prefix.length());
+        else
+            m_requestPath = m_location._root + request.getUri().getPath();
         m_autoIndex = m_location._autoindex;
         m_method = request.getMethod();
     }
@@ -84,9 +91,12 @@ void Response::initResponse(Server& server, Request& request) {
     m_body = "";
     m_sent_bytes = 0;
     m_indexFile = m_location._index;
+    std::cout << "     [ param ]" << std::endl;
+    std::cout << " method: " << m_method << std::endl;
+    std::cout << " targetPath: " << m_requestPath << std::endl;
 }
 
-size_t          Response::setSentBytes(size_t n) {
+void          Response::setSentBytes(size_t n) {
     m_sent_bytes = n;
 }
 
@@ -101,18 +111,14 @@ std::string		Response::writeHeader(void)
 {
 	std::string	header = "";
 
-    if (m_body != "")
-        m_contentLength = std::to_string(m_body.size());
-	if (m_contentLength != "")
-		header += "Content-Length: " + m_contentLength + "\r\n";
+	header += "Content-Length: " + std::to_string(m_body.size()) + "\r\n";
 	// FIXME: m_contentType이 공백으로 시작하는 듯
     if (m_contentType != "")
 		header += "Content-Type: " + m_contentType + "\r\n";
 	if (m_connection != "")
 		header += "Connection: " + m_connection + "\r\n";
-    if (m_code == 301)
-        header = header + "Location: " + "/directory/" + "\r\n";
-	return (header);
+	header += "\r\n";
+    return (header);
 }
 
 int Response::validCheck(void) {
@@ -138,13 +144,9 @@ int Response::validCheck(void) {
 
 void Response::runResponse () {
     if (validCheck() != 0) {
-        std::cout << "error code=" << m_code << std::endl;
         makeErrorResponse(m_code);
     }
     else {
-        std::cout << "request:\n";
-        std::cout << m_method << "   " << m_requestPath << std::endl;
-        // m_responseMsg = "we will make response for you\r\n";
         if (m_method == "GET")
             getMethod();
         else if (m_method == "HEAD")
@@ -172,10 +174,9 @@ void             Response::handleGet(void) {
     stat(path,&buf);
     is_dir = buf.st_mode & S_IFDIR;
     is_exist = access(path, F_OK); // F_OK 옵션은 파일존재여부만 확인
-    if (is_exist == -1){
-        // locaiton 키로 directory가 있으면 응답으로 보내주면?
-        m_code = 301;
-        makeErrorResponse(301);
+    if (is_exist == -1) {
+        m_code = 404;
+        makeErrorResponse(404);
     }
     else
     {
@@ -198,7 +199,8 @@ void             Response::handleGet(void) {
                     m_code = 403;
                 }
                 else // index.html이 없는데 autoindex가 on이다 => 디렉토리 리스팅
-                {  
+                {
+                    m_code = 200;
                     m_body = "";
                     makeAutoIndex();
                 }    
@@ -258,6 +260,7 @@ void			Response::getMethod(void) {
 }
 
 void			Response::headMethod(void) {
+    //FIXME: HEAD요청일 때도 content_length는 GET요청일 때와 동일할 것
     getMethod();
     m_body = "";
 }
@@ -403,8 +406,12 @@ std::string Response::writeBody () {
 void Response::writeResponseMsg(void) {
     m_responseMsg += writeStartLine();
     m_responseMsg += writeHeader();
+    std::cout << ">>>>>>>> RESPONSE >>>>>>>>" << std::endl;
+    prn_prepend(m_responseMsg, ">>> ");
+    std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>\n\n" << std::endl;
     if (m_body != "")
-        m_responseMsg += "\r\n" + m_body;
+        m_responseMsg += m_body;
+
 }
 
 void Response::addDirectory(std::string &body)
@@ -478,7 +485,6 @@ Location Response::findMatchingLocation(Server& s, Request& rq) {
 	const Server::locations_map_type& locations = s.getLocations();
 	Server::locations_map_type::const_reverse_iterator rit;
 	Server::locations_map_type::const_reverse_iterator rit_best_match;
-
     const std::string& uri = rq.getUri().getPath();
 	bool prefix_found = false;
 	for (rit = locations.rbegin(); rit != locations.rend(); ++rit) {

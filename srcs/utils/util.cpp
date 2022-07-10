@@ -1,3 +1,5 @@
+#include <iostream>
+#include <sstream>
 #include "util.hpp"
 
 void ft_split(std::string buf, std::vector<std::string> &info)//다른 곳으로 이동 예정
@@ -40,4 +42,11 @@ std::string& trimSpace(std::string& str) {
     str.erase(str.find_last_not_of(' ') + 1);
     return str;
 
+}
+
+void prn_prepend(const std::string& str, const std::string& ch) {
+    std::istringstream ss(str);
+    std::string line;
+    while (std::getline(ss, line, '\n'))
+        std::cout << ch << line << std::endl;
 }

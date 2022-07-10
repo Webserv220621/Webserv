@@ -12,6 +12,7 @@
 
 struct Location
 {
+    std::string _prefix;
     std::string _root;
     std::string _index;
     std::string _cgipath;

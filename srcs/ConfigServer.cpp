@@ -90,6 +90,7 @@ void Server::parsingServer(std::vector<std::string>::iterator it, std::vector<st
                     t_location._cgipath = checkSemicolon(*it);
                 }
             }
+            t_location._prefix = tmp;
             m_location.insert(make_pair(tmp, t_location));
             it--;
         }

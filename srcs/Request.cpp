@@ -13,6 +13,7 @@ Request::~Request() {};
 int Request::append_msg(char* str) {
 	int ret = 0;
 	std::string buf(str);
+	m_raw.append(str);
 
 	while (!buf.empty()) {
 		if (m_current_state == READING_STARTLINE)
@@ -112,26 +113,22 @@ int Request::process_headers(std::string& buf) {
 		if (m_headers.count("host") == 0)
 			return BAD_REQUEST;
 
-		// if (m_method == "GET" || m_method == "HEAD" || m_method == "DELETE") 
 		m_is_done = true;
 		m_is_valid = true;
 		m_current_state = RECV_END;
-		// else if (m_method == "POST") {
-		// 	if (m_headers.count("content-length")) {
-		// 		m_body_length = strtol(m_headers["content-length"].c_str(), NULL, 0);
-		// 		if (m_body_length < 0)
-		// 			return BAD_REQUEST;
-		// 	}
-		// 	if (m_headers.count("content-length") == 0 && m_headers.count("transfer-encoding") == 0)
-		// 		return LENGTH_REQUIRED;
-		// 	else {
-		// 		m_current_state = READING_BODY;
-		// 		buf = m_prev.substr(n + 2);
-		// 		m_prev = "";
-		// 		if (m_headers.count("transfer-encoding"))
-		// 			m_body_chunked = true;
-		// 	}
-		// }
+
+		if ( m_headers.count("content-length") || m_headers.count("transfer-encoding") ) {
+			m_current_state = READING_BODY;
+			buf = m_prev.substr(n + 2);
+			m_prev = "";
+			if (m_headers.count("content-length")) {
+				m_body_length = strtol(m_headers["content-length"].c_str(), NULL, 0);
+				if (m_body_length < 0)
+					return BAD_REQUEST;
+			}
+			if (m_headers.count("transfer-encoding"))
+				m_body_chunked = true;
+		}
 	}
 	else {
 		std::string line = m_prev.substr(0, n);
@@ -236,7 +233,12 @@ const std::string& Request::getBody() const {
 	return m_body;
 }
 
+const std::string& Request::getRaw() const {
+	return m_raw;
+}
+
 void Request::reset() {
+	m_raw = "";
 	m_prev = "";
 	m_method = "";
 	m_uri.reset();

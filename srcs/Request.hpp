@@ -16,6 +16,7 @@ enum rq_state {
 
 class Request {
 	private:
+		std::string m_raw;
 		std::string m_prev;
 		std::string m_method;
 		Uri m_uri;
@@ -52,6 +53,7 @@ class Request {
 		const std::string& getVersion() const;
 		std::string& getHeaderValue(const std::string& key);
 		const std::string& getBody() const;
+		const std::string& getRaw() const;
 		
 		void reset();
 		const std::map<std::string,std::string>& getAllHeaders() const;
