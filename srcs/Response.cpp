@@ -71,7 +71,7 @@ void Response::initResponse(Server& server, Request& request) {
     if (request.isValid()) {
         m_code = 0;
         m_location = findMatchingLocation(server, request);
-        if (request.getBody().size() > m_location._bodysize)
+        if (request.getMethod() == "POST" && request.getBody().size() > m_location._bodysize)
             m_code = 413;
         const std::string& uripath = request.getUri().getPath();
         if (m_location._prefix.length() > 1)

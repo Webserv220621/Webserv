@@ -16,7 +16,6 @@ int Request::append_msg(char* str) {
 	m_raw.append(str);
 
 	while (!buf.empty()) {
-		std::cout << "test-----" << m_current_state << std::endl;
 		if (m_current_state == READING_STARTLINE)
 			ret = process_startline(buf);
 		else if (m_current_state == READING_HEADERS)
@@ -25,7 +24,7 @@ int Request::append_msg(char* str) {
 			ret = process_body(buf);
 		else
 			break;
-		if (ret == 3) {
+		if (ret != 0) {
 			m_current_state = ret;
 			m_is_done = true;
 			m_is_valid = false;
@@ -118,7 +117,6 @@ int Request::process_headers(std::string& buf) {
 		m_is_valid = true;
 		m_current_state = RECV_END;
 		if ( m_headers.count("content-length") || m_headers.count("transfer-encoding") ) {
-			m_current_state = READING_BODY;
 			buf = m_prev.substr(n + 2);
 			m_prev = "";
 			if (m_headers.count("content-length")) {
@@ -128,6 +126,8 @@ int Request::process_headers(std::string& buf) {
 			}
 			if (m_headers.count("transfer-encoding"))
 				m_body_chunked = true;
+			m_current_state = READING_BODY;
+			m_is_done = false;
 		}
 	}
 	else {
@@ -164,12 +164,14 @@ int Request::process_body_chunked(std::string& buf) {
 			m_current_body_size += m_chunk_size;
 			m_prev = "";
 		}
-		std::cout << "size test chunked: " << m_chunk_size << std::endl;
 	}
 	else {
 		// m_chunk_data가 m_chunk_size + \r\n을 가지고 있을 때까지 append
-		if (m_chunk_data.size() + m_prev.size() < m_chunk_size + 2)
+		if (m_chunk_data.size() + m_prev.size() < m_chunk_size + 2) {
 			m_chunk_data.append(m_prev);
+			m_prev = "";
+			buf = "";
+		}
 		else {
 			size_t n_pos = m_chunk_size + 2 - m_chunk_data.size();
 			m_chunk_data.append(m_prev.substr(0, n_pos));
