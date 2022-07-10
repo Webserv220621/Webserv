@@ -95,12 +95,11 @@ int Webserv::monitor_events(int kq) {
 					buf[rdbytes] = '\0';
 					Request& rq = connection_list[event_fd].request;
 					int result = rq.append_msg(buf);
-					if (! rq.isDone()) {
-						std:: cout << "< Request msg received, but not yet finished" << std::endl;
+					if (! rq.isDone())
 						continue;
-					}
 					std::cout << "<<<<<<<< REQUEST <<<<<<<<" << std::endl;
 					prn_prepend(rq.getRaw(), "<<< ");
+					std::cout << "<<< body size=" << rq.getBody().size() << std::endl;
 					std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
 					// 수신 완료됐으면 리스폰스 메시지 생성
 					Response& resp = connection_list[event_fd].response;

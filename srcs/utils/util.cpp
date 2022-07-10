@@ -1,5 +1,6 @@
 #include <iostream>
 #include <sstream>
+#include <sys/time.h>
 #include "util.hpp"
 
 void ft_split(std::string buf, std::vector<std::string> &info)//다른 곳으로 이동 예정
@@ -49,4 +50,8 @@ void prn_prepend(const std::string& str, const std::string& ch) {
     std::string line;
     while (std::getline(ss, line, '\n'))
         std::cout << ch << line << std::endl;
+}
+
+unsigned int millisec(struct timeval& from, struct timeval& to) {
+    return ((to.tv_sec - from.tv_sec) * 1000 + (to.tv_usec - from.tv_usec) / 1000);
 }

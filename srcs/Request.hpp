@@ -3,6 +3,7 @@
 
 # include <iostream>
 # include <map>
+# include <sys/time.h>
 # include "utils/Uri.hpp"
 
 # define MAX_URI 8192
@@ -32,6 +33,8 @@ class Request {
 		int m_current_state;
 		bool m_is_done;
 		bool m_is_valid;
+		struct timeval _start_time;
+		int _part_cnt;
 
 		int parse_startline(std::string& buf);
 		int parse_headers(std::string& buf);
