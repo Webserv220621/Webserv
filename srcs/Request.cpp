@@ -13,6 +13,7 @@ Request::~Request() {};
 int Request::append_msg(char* str) {
 	int ret = 0;
 	std::string buf(str);
+	m_raw.append(str);
 
 	while (!buf.empty()) {
 		if (m_current_state == READING_STARTLINE)
@@ -232,7 +233,12 @@ const std::string& Request::getBody() const {
 	return m_body;
 }
 
+const std::string& Request::getRaw() const {
+	return m_raw;
+}
+
 void Request::reset() {
+	m_raw = "";
 	m_prev = "";
 	m_method = "";
 	m_uri.reset();

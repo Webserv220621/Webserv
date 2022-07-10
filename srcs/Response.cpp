@@ -84,6 +84,9 @@ void Response::initResponse(Server& server, Request& request) {
     m_body = "";
     m_sent_bytes = 0;
     m_indexFile = m_location._index;
+    std::cout << "     [ param ]" << std::endl;
+    std::cout << " method: " << m_method << std::endl;
+    std::cout << " targetPath: " << m_requestPath << std::endl;
 }
 
 size_t          Response::setSentBytes(size_t n) {
@@ -136,13 +139,9 @@ int Response::validCheck(void) {
 
 void Response::runResponse () {
     if (validCheck() != 0) {
-        std::cout << "error code=" << m_code << std::endl;
         makeErrorResponse(m_code);
     }
     else {
-        std::cout << "request:\n";
-        std::cout << m_method << "   " << m_requestPath << std::endl;
-
         if (m_method == "GET")
             getMethod();
         else if (m_method == "HEAD")
@@ -195,7 +194,7 @@ void             Response::handleGet(void) {
                     m_code = 403;
                 }
                 else // index.html이 없는데 autoindex가 on이다 => 디렉토리 리스팅
-                {  
+                {
                     m_body = "";
                     makeAutoIndex();
                 }    
@@ -400,8 +399,12 @@ std::string Response::writeBody () {
 void Response::writeResponseMsg(void) {
     m_responseMsg += writeStartLine();
     m_responseMsg += writeHeader();
+    std::cout << ">>>>>>>> RESPONSE >>>>>>>>" << std::endl;
+    prn_prepend(m_responseMsg, ">>> ");
+    std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>\n\n" << std::endl;
     if (m_body != "")
         m_responseMsg += "\r\n" + m_body;
+
 }
 
 void Response::addDirectory(std::string &body)

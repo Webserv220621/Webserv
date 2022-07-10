@@ -5,6 +5,7 @@
 #include "Connection.hpp"
 #include "kevent_wrapper.hpp"
 #include "common.hpp"
+#include "utils/util.hpp"
 
 int Webserv::run() {
 	int kq = kqueue();
@@ -63,10 +64,13 @@ int Webserv::monitor_events(int kq) {
 		for (int i = 0; i < event_count; ++i) {
 			int event_fd = eventlists[i].ident;
 			int server_idx = getServerIdx(event_fd);
-			std::cout << server_idx;
 			if (server_idx >= 0) {
-				std::cout << "cur server fd: " << event_fd <<std::endl;
 				int connect_socket_fd = m_server_list[server_idx].accept_new_connection(kq);
+				if (connect_socket_fd < 0) {
+					std::cout << "can't accept new connection request" << std::endl;
+					continue;
+				}
+				std::cout << "new connection on server " << event_fd - 3 << std::endl;
 				// connect_fd와 커넥션객체 연결해서 저장
 				connection_list[connect_socket_fd].fd = connect_socket_fd;
 				connection_list[connect_socket_fd].server = m_server_list[server_idx];
@@ -84,14 +88,20 @@ int Webserv::monitor_events(int kq) {
 					// 연결 종료
 					close(event_fd);
 					connection_list.erase(event_fd);
+					std::cout << "connection closed" << std::endl;
 				}
 				else {
 					// 커넥션객체 찾아서 리퀘스트객체에게 전달
 					buf[rdbytes] = '\0';
 					Request& rq = connection_list[event_fd].request;
 					int result = rq.append_msg(buf);
-					if (! rq.isDone())
+					if (! rq.isDone()) {
+						std:: cout << "< Request msg received, but not yet finished" << std::endl;
 						continue;
+					}
+					std::cout << "<<<<<<<< REQUEST <<<<<<<<" << std::endl;
+					prn_prepend(rq.getRaw(), "<<< ");
+					std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
 					// 수신 완료됐으면 리스폰스 메시지 생성
 					Response& resp = connection_list[event_fd].response;
 					resp.initResponse(connection_list[event_fd].server, connection_list[event_fd].request);
@@ -134,10 +144,12 @@ int Webserv::monitor_events(int kq) {
 					else {
 						connection_list.erase(event_fd);
 						close(event_fd);
+						std::cout << "connection closed" << std::endl;
 					}
 #else
 					connection_list.erase(event_fd);
 					close(event_fd);
+					std::cout << "connection closed" << std::endl;
 #endif
 				}
 			}
