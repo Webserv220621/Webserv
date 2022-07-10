@@ -71,10 +71,13 @@ void Response::initResponse(Server& server, Request& request) {
     if (request.isValid()) {
         m_code = 0;
         m_location = findMatchingLocation(server, request);
-        if (request.getMethod() == "POST" && request.getBody().size() > m_location._bodysize)
+        if (m_location._bodysize && request.getBody().size() > m_location._bodysize){
             m_code = 413;
+        }
         const std::string& uripath = request.getUri().getPath();
-        if (m_location._prefix.length() > 1)
+        if (m_location._prefix[0] == '*')
+            m_requestPath = uripath;
+        else if (m_location._prefix.length() > 1)
             m_requestPath = m_location._root + uripath.substr(m_location._prefix.length());
         else
             m_requestPath = m_location._root + request.getUri().getPath();
