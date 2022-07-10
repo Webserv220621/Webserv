@@ -68,7 +68,11 @@ void Response::initResponse(Server& server, Request& request) {
     if (request.isValid()) {
         m_code = 0;
         m_location = findMatchingLocation(server, request);
-        m_requestPath = m_location._root + request.getUri().getPath();
+        const std::string& uripath = request.getUri().getPath();
+        if (m_location._prefix.length() > 1)
+            m_requestPath = m_location._root + uripath.substr(m_location._prefix.length());
+        else
+            m_requestPath = m_location._root + request.getUri().getPath();
         m_autoIndex = m_location._autoindex;
         m_method = request.getMethod();
     }
@@ -195,6 +199,7 @@ void             Response::handleGet(void) {
                 }
                 else // index.html이 없는데 autoindex가 on이다 => 디렉토리 리스팅
                 {
+                    m_code = 200;
                     m_body = "";
                     makeAutoIndex();
                 }    
@@ -478,7 +483,6 @@ Location Response::findMatchingLocation(Server& s, Request& rq) {
 	const Server::locations_map_type& locations = s.getLocations();
 	Server::locations_map_type::const_reverse_iterator rit;
 	Server::locations_map_type::const_reverse_iterator rit_best_match;
-
     const std::string& uri = rq.getUri().getPath();
 	bool prefix_found = false;
 	for (rit = locations.rbegin(); rit != locations.rend(); ++rit) {
