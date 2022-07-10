@@ -130,6 +130,7 @@ int Response::validCheck(void) {
     // 각종 리퀘스트에러
     if (m_code > 299)
         return m_code;
+
     // m_method 가 allowed_method 안에 있는지 체크해서 method not allowed 전송
     bool allowed = false;
     std::vector<std::string>::iterator it;
@@ -173,6 +174,8 @@ void             Response::handleGet(void) {
     std::string indexHtml;
     std::ifstream readFile; 
     std::stringstream readBuf;
+
+    /*
     int         hasSlash;
     // response 객체 생성될 때 파일인지 디렉토리인지 구분하는 변수 m_type 을 줘서 
     // 만약 is_exit가 true로 나와도 is_dir와 m_type이 일치하지 않으면 404에러를 내도록 
@@ -182,15 +185,17 @@ void             Response::handleGet(void) {
     if (m_requestPath[m_requestPath.size()-1] == '/'){
         hasSlash = 1;
     }
+    */
+
     path = m_requestPath.c_str();
     stat(path,&buf);
     is_dir = buf.st_mode & S_IFDIR;
     is_exist = access(path, F_OK); // F_OK 옵션은 파일존재여부만 확인
-    std::cout << "path : " << path << std::endl;
-    std::cout << "is_exist(-1 404) : "<< is_exist << std::endl;
+    // std::cout << "path : " << path << std::endl;
+    // std::cout << "is_exist(-1 404) : "<< is_exist << std::endl;
     if (is_exist == -1) {
         m_code = 404;
-        makeErrorResponse(404);
+        makeErrorResponse(m_code);
     }
     else
     {
@@ -219,7 +224,7 @@ void             Response::handleGet(void) {
                 if (m_autoIndex == 0) //index.html이 없는데 autoindex가 off다 => 403 Forbidden
                 {
                     m_code = 404;
-                    makeErrorResponse(404);
+                    makeErrorResponse(m_code);
                 }
                 else // index.html이 없는데 autoindex가 on이다 => 디렉토리 리스팅
                 {
@@ -304,6 +309,7 @@ void Response::handlePost() {
 }
 
 void Response::handlePut() {
+    //FIXME: 이미 파일이 존재하면 append하지 말고 기존 내용 덮어쓸것
     const char  *path;
     std::ofstream writeFile; 
     int         is_exist;

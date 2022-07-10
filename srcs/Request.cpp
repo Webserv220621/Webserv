@@ -13,7 +13,6 @@ Request::~Request() {};
 int Request::append_msg(char* str) {
 	int ret = 0;
 	std::string buf(str);
-	m_raw.append(str);
 
 	while (!buf.empty()) {
 		if (m_current_state == READING_STARTLINE)
@@ -36,6 +35,7 @@ int Request::append_msg(char* str) {
 
 // line을 공백단위로 잘라서 method, uri, version에 저장
 int Request::parse_startline(std::string& line) {
+	m_raw.append(line).append("\r\n");
 	size_t start_pos = 0, next;
 
 	next = line.find(' ');
@@ -68,6 +68,7 @@ int Request::parse_startline(std::string& line) {
 
 // line을 colon단위로 잘라서 key:value로 저장
 int Request::parse_headers(std::string& line) {
+	m_raw.append(line).append("\r\n");
 	size_t pos = line.find(':');
 	std::string key = line.substr(0, pos);
 	key = trimSpace(key);
@@ -116,6 +117,7 @@ int Request::process_headers(std::string& buf) {
 		m_is_done = true;
 		m_is_valid = true;
 		m_current_state = RECV_END;
+
 		if ( m_headers.count("content-length") || m_headers.count("transfer-encoding") ) {
 			buf = m_prev.substr(n + 2);
 			m_prev = "";
