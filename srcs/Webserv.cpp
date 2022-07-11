@@ -134,7 +134,7 @@ int Webserv::monitor_events(int kq) {
 					// 전송 완료. C-W 삭제.
 					// 연결유지할거면 리퀘스트객체 초기화 후 C-R 추가.
 // TODO: needs test on MacOS
-#if 0
+#if 1
 					remove_write_filter(kq, event_fd);
 					if (response.isKeepAlive()) {
 						connection_list[event_fd].request.reset();

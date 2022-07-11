@@ -67,8 +67,8 @@ void Response::initResponse(Server& server, Request& request) {
     m_bodySize = 0;
     m_contentType = "text/plain";
     m_contentLength = "";
-    // m_connection = "Keep-Alive";
-    m_connection = "Close";
+    m_connection = "Keep-Alive";
+    // m_connection = "Close";
     if (request.isValid()) {
         m_code = 0;
         m_location = findMatchingLocation(server, request);
