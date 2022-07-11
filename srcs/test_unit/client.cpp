@@ -13,10 +13,12 @@ a.out msgfile 127.0.0.1 8080 	- arg == 3: IP:PORT에게 msgfile 전송
 */
 
 void sendmsg(std::ifstream& infile, int fd);
+void sendeee(int fd, size_t tmp_body_size);
 
 int main(int ac, char **av) {
 	std::string ip, port;
 	std::ifstream infile;
+	size_t tmp_body_size = 0;
 
 	std::cout << "Usage: a.out msgfile [ip port]\n" << std::endl;
 	if (ac == 2) {
@@ -30,8 +32,12 @@ int main(int ac, char **av) {
 	else
 		return 1;
 	infile.open(av[1]);
-	if (infile.fail())
+	if (infile.fail()) {
 		std::cout << "can't read " << av[1] << std::endl;
+		std::cout << "instead sends 'e' " << tmp_body_size << " times." << std::endl;
+		tmp_body_size = atol(av[1]);
+	}
+	std::cout << std::endl;
 	
 	int fd = socket(PF_INET, SOCK_STREAM, 0);
 
@@ -52,7 +58,10 @@ int main(int ac, char **av) {
 	}
 	std::cout << "connected to " << ip << ":" << port << std::endl;
 
-	sendmsg(infile, fd);
+	if (tmp_body_size == 0)
+		sendmsg(infile, fd);
+	else
+		sendeee(fd, tmp_body_size);
 	close(fd);
 	infile.close();
 	return 0;
@@ -68,6 +77,29 @@ void sendmsg(std::ifstream& infile, int fd) {
 	}
 	std::cout << "=====   request   =====" << std::endl;
 	std::cout << buf << std::endl;
+	int ret = send(fd, buf.c_str(), strlen(buf.c_str()), 0);
+	if (ret < 0) {
+		perror("send error");
+		exit(1);
+	}
+	std::cout << "=====   response   =====" << std::endl;
+	char data[9000];
+	ret = recv(fd, &data, 8999, 0);
+	if (ret < 0) {
+		perror("recv error");
+		exit(1);
+	}
+	std::cout << data << std::endl;
+}
+
+void sendeee(int fd, size_t tmp_body_size) {
+	std::string buf = "POST /directory/youpi.bla HTTP/1.1\r\nhost: aa\r\ncontent-length:";
+	buf.append(std::to_string(tmp_body_size)).append("\r\n\r\n");
+
+	int i = 0;
+	while (i++ < tmp_body_size)
+		buf.push_back('e');
+
 	int ret = send(fd, buf.c_str(), strlen(buf.c_str()), 0);
 	if (ret < 0) {
 		perror("send error");
