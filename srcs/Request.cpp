@@ -13,8 +13,8 @@ Request::~Request() {};
 
 int Request::append_msg(char* str) {
 	if (_part_cnt == 0) {
-		std::cout << "< receiving request msg..." << std::endl;
-		gettimeofday(&_start_time, NULL);
+		// std::cout << "< receiving request msg..." << std::endl;
+		// gettimeofday(&_start_time, NULL);
 	}
 	_part_cnt++;
 	int ret = 0;
@@ -38,9 +38,9 @@ int Request::append_msg(char* str) {
 	}
 	if (m_is_done) {
 		struct timeval current;
-		gettimeofday(&current, NULL);
-		unsigned int elapsed = millisec(_start_time, current);
-		std::cout << "   [ part: " << _part_cnt << ",  elapsed: " << elapsed << "ms ]" << std::endl;
+		// gettimeofday(&current, NULL);
+		// unsigned int elapsed = millisec(_start_time, current);
+		// std::cout << "   [ part: " << _part_cnt << ",  elapsed: " << elapsed << "ms ]" << std::endl;
 	}
 
 	return ret;

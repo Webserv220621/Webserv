@@ -70,7 +70,7 @@ int Webserv::monitor_events(int kq) {
 					std::cout << "can't accept new connection request" << std::endl;
 					continue;
 				}
-				std::cout << "new connection on server " << event_fd - 3 << std::endl;
+				// std::cout << "new connection on server " << event_fd - 3 << std::endl;
 				// connect_fd와 커넥션객체 연결해서 저장
 				connection_list[connect_socket_fd].fd = connect_socket_fd;
 				connection_list[connect_socket_fd].server = m_server_list[server_idx];
@@ -88,7 +88,7 @@ int Webserv::monitor_events(int kq) {
 					// 연결 종료
 					close(event_fd);
 					connection_list.erase(event_fd);
-					std::cout << "connection closed" << std::endl;
+					// std::cout << "connection closed" << std::endl;
 				}
 				else {
 					// 커넥션객체 찾아서 리퀘스트객체에게 전달
@@ -97,10 +97,10 @@ int Webserv::monitor_events(int kq) {
 					int result = rq.append_msg(buf);
 					if (! rq.isDone())
 						continue;
-					std::cout << "<<<<<<<< REQUEST <<<<<<<<" << std::endl;
-					prn_prepend(rq.getRaw(), "<<< ");
-					std::cout << "<<< body size=" << rq.getBody().size() << std::endl;
-					std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
+					// std::cout << "<<<<<<<< REQUEST <<<<<<<<" << std::endl;
+					// prn_prepend(rq.getRaw(), "<<< ");
+					// std::cout << "<<< body size=" << rq.getBody().size() << std::endl;
+					// std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
 					// 수신 완료됐으면 리스폰스 메시지 생성
 					Response& resp = connection_list[event_fd].response;
 					resp.initResponse(connection_list[event_fd].server, connection_list[event_fd].request);
@@ -148,7 +148,7 @@ int Webserv::monitor_events(int kq) {
 #else
 					connection_list.erase(event_fd);
 					close(event_fd);
-					std::cout << "connection closed" << std::endl;
+					// std::cout << "connection closed" << std::endl;
 #endif
 				}
 			}

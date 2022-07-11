@@ -106,9 +106,9 @@ void Response::initResponse(Server& server, Request& request) {
     m_body = "";
     m_sent_bytes = 0;
     m_indexFile = m_location._index;
-    std::cout << "     [ param ]" << std::endl;
-    std::cout << " method: " << m_method << std::endl;
-    std::cout << " targetPath: " << m_requestPath << std::endl;
+    // std::cout << "     [ param ]" << std::endl;
+    // std::cout << " method: " << m_method << std::endl;
+    // std::cout << " targetPath: " << m_requestPath << std::endl;
 }
 
 void          Response::setSentBytes(size_t n) {
@@ -228,7 +228,6 @@ void             Response::handleGet(void) {
                 return;
             }
             indexHtml = m_requestPath + "/" + m_indexFile; // <- 주의 
-            std::cout << "indexHtml: " << indexHtml << std::endl;
             if (access(indexHtml.c_str(), F_OK) == 0) // 그 디렉토리에index.html이 있다면 => index.html
             {
                 readFile.open(indexHtml, std::ifstream::in);
@@ -363,13 +362,11 @@ void			Response::postMethod(void) {
         for (int i = 0; i < result.size(); i++){
             if (result[i].find("Status") != std::string::npos)
             {
-                std::cout << result[i] << std::endl;
                 int start = result[i].find(" ");
                 m_code = stoi(result[i].substr(start, 4)); // stoi c98 주의#######
             }
             else if (result[i].find("Content-Type") != std::string::npos)
             {
-                std::cout << result[i] << std::endl;
                 int start = result[i].find(" ");
                 int end = result[i].find(" ", start);
                 m_contentType = result[i].substr(start, end-3);
@@ -379,7 +376,6 @@ void			Response::postMethod(void) {
                 m_body += result[i];
                 if (i != result.size()-1)
                     m_body += "\n";
-                std::cout << m_body.substr(0,1000) << std::endl;
             }
         }
 	}
@@ -457,9 +453,9 @@ std::string Response::writeBody () {
 void Response::writeResponseMsg(void) {
     m_responseMsg += writeStartLine();
     m_responseMsg += writeHeader();
-    std::cout << ">>>>>>>> RESPONSE >>>>>>>>" << std::endl;
-    prn_prepend(m_responseMsg, ">>> ");
-    std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>\n\n" << std::endl;
+    // std::cout << ">>>>>>>> RESPONSE >>>>>>>>" << std::endl;
+    // prn_prepend(m_responseMsg, ">>> ");
+    // std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>\n\n" << std::endl;
     if (m_body != "")
         m_responseMsg += m_body;
 

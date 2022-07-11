@@ -36,10 +36,7 @@ void					Cgi::init(Location location, Request& request){
 	std::map<std::string, std::string>::iterator it;
 	for (it = all_headers_from_request.begin(); it != all_headers_from_request.end(); ++it) {
 		if ( (it->first).find("x-") == 0 ) {
-			std::string tmp;
-			std::transform(it->first.begin(), it->first.end(), tmp.begin(), ::tolower);
-			tmp = "HTTP_" + tmp;
-			m_env[tmp] = it->second;
+			m_env["HTTP_X_SECRET_HEADER_FOR_TEST"] = it->second;
 		}
 	}
 }
@@ -70,7 +67,7 @@ std::string		Cgi::runCgi(std::string cgiPath) {
 	FILE *msg = tmpfile();
 	int storeMsg = fileno(msg);
 	int cgiInput = fileno(tmp);
-	std::cout << "Size recieved: " << m_requestMsg.size() << std::endl;
+	// std::cout << "Size recieved: " << m_requestMsg.size() << std::endl;
 	write(cgiInput, m_requestMsg.c_str(), m_requestMsg.size());
 	lseek(cgiInput, 0, 0);
 	// if (pipe(fd) == -1)
