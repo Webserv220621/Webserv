@@ -67,7 +67,8 @@ void Response::initResponse(Server& server, Request& request) {
     m_bodySize = 0;
     m_contentType = "text/plain";
     m_contentLength = "";
-    m_connection = "Keep-Alive"; 
+    // m_connection = "Keep-Alive"; 
+    m_connection = "Close"; 
     if (request.isValid()) {
         m_code = 0;
         m_location = findMatchingLocation(server, request);
@@ -89,6 +90,8 @@ void Response::initResponse(Server& server, Request& request) {
         m_code = request.getState();
     m_responseMsg = "";
     m_cgiPath =  m_location._cgipath;
+    if (m_requestPath.substr(m_requestPath.find_last_of(".")+1) != "bla" || m_method != "POST")
+        m_cgiPath = "";
     m_requestBody = request.getBody();
     m_host =request.getUri().getHost();
     m_port = request.getUri().getPort();
@@ -360,11 +363,13 @@ void			Response::postMethod(void) {
         for (int i = 0; i < result.size(); i++){
             if (result[i].find("Status") != std::string::npos)
             {
+                std::cout << result[i] << std::endl;
                 int start = result[i].find(" ");
                 m_code = stoi(result[i].substr(start, 4)); // stoi c98 주의#######
             }
             else if (result[i].find("Content-Type") != std::string::npos)
             {
+                std::cout << result[i] << std::endl;
                 int start = result[i].find(" ");
                 int end = result[i].find(" ", start);
                 m_contentType = result[i].substr(start, end-3);
@@ -374,8 +379,9 @@ void			Response::postMethod(void) {
                 m_body += result[i];
                 if (i != result.size()-1)
                     m_body += "\n";
+                std::cout << m_body.substr(0,1000) << std::endl;
             }
-        }   
+        }
 	}
 	else
 	{
