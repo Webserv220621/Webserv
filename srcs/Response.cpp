@@ -325,7 +325,7 @@ void Response::handlePost() {
 }
 
 void Response::handlePut() {
-    //FIXME: 이미 파일이 존재하면 append하지 말고 기존 내용 덮어쓸것
+    //FIXME: 이미 파일이 존재하면 append하지 말고 기존 내용 덮어쓸것 -> 336번줄 수정
     const char  *path;
     std::ofstream writeFile; 
     int         is_exist;
@@ -333,7 +333,7 @@ void Response::handlePut() {
     path = m_requestPath.c_str();
     is_exist = access(path, F_OK); // F_OK 옵션은 파일존재여부만 확인
     if (is_exist == 0){
-        writeFile.open(path, std::ios_base::app | std::ios_base::out);
+        writeFile.open(path, std::ios_base::out);
         writeFile << m_requestBody;
         writeFile.close();
         m_code = 204; // 200 or 204
