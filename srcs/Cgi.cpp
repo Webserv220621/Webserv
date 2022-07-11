@@ -14,7 +14,7 @@ void					Cgi::init(Location location, Request& request){
     m_env["QUERY_STRING"] = request.getUri().getQuery();
     m_env["REQUEST_METHOD"] = request.getMethod();
     m_env["CONTENT_TYPE"] = request.getHeaderValue("Content-Type");
-
+	m_env["HTTP_X_SECRET_HEADER_FOR_TEST"] = request.getHeaderValue("X-Secret-Header-For-Test");
 	// FIXME: getBody().length() 가 안됐던 이유는 우변이 size_t이기 때문이었습니다.
 	// 둘 중 뭐가 나을지는 뭐가 나을지는 아직 잘 모르겠는데, content-length는 리퀘스트에 있을수도 있고 없을수도 있으니까(transfer-encoding=chunked)
 	// body length를 to_string하는 게 낫지 않을까 싶어요
@@ -31,7 +31,7 @@ void					Cgi::init(Location location, Request& request){
     m_env["SERVER_SOFTWARE"] = "Webserv/1.0";
     m_env["SERVER_PORT"] = request.getUri().getPort();
     m_env["SERVER_NAME"] = request.getUri().getHost();
-	m_env["HTTP_X_SECRET_HEADER_FOR_TEST"] = request.getHeaderValue("X-Secret-Header-For-Test");
+	
 }
 
 char					**Cgi::envToChar() {
