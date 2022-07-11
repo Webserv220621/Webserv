@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/wait.h>
-#include <algorithm>
 #include "Cgi.hpp"
 //PATH_INFO와 PATH_TRANSLATED, SCRIPT_NAME 주의 
 Cgi::Cgi()
@@ -15,11 +14,6 @@ void					Cgi::init(Location location, Request& request){
     m_env["QUERY_STRING"] = request.getUri().getQuery();
     m_env["REQUEST_METHOD"] = request.getMethod();
     m_env["CONTENT_TYPE"] = request.getHeaderValue("Content-Type");
-	m_env["HTTP_X_SECRET_HEADER_FOR_TEST"] = request.getHeaderValue("X-Secret-Header-For-Test");
-	// FIXME: getBody().length() 가 안됐던 이유는 우변이 size_t이기 때문이었습니다.
-	// 둘 중 뭐가 나을지는 뭐가 나을지는 아직 잘 모르겠는데, content-length는 리퀘스트에 있을수도 있고 없을수도 있으니까(transfer-encoding=chunked)
-	// body length를 to_string하는 게 낫지 않을까 싶어요
-    // m_env["CONTENT_LENGTH"] = request.getHeaderValue("Content-Length");
     m_env["CONTENT_LENGTH"] = std::to_string(request.getBody().length());
 
     m_env["SCRIPT_FILENAME"] = location._root + request.getUri().getPath();
@@ -32,11 +26,23 @@ void					Cgi::init(Location location, Request& request){
     m_env["SERVER_SOFTWARE"] = "Webserv/1.0";
     m_env["SERVER_PORT"] = request.getUri().getPort();
     m_env["SERVER_NAME"] = request.getUri().getHost();
+
+	/* request에서 앞에 x- 가 붙은 비표준 헤더들을 CGI ENV가 요구하는 형식으로 변환
+	 * X-Secret-Header ---> HTTP_X_SECRET_HEADER
+	*/
 	std::map<std::string, std::string> all_headers_from_request = request.getAllHeaders();
 	std::map<std::string, std::string>::iterator it;
 	for (it = all_headers_from_request.begin(); it != all_headers_from_request.end(); ++it) {
-		if ( (it->first).find("x-") == 0 ) {
-			m_env["HTTP_X_SECRET_HEADER_FOR_TEST"] = it->second;
+		const std::string& old_key = it->first;
+		if ( old_key.find("x-") == 0 ) {
+			std::string new_key = "HTTP_";
+			for (size_t i = 0; i < old_key.length(); ++i) {
+				if (old_key[i] == '-')
+					new_key.push_back('_');
+				else
+					new_key.push_back(std::toupper(old_key[i]));
+			}
+			m_env[new_key] = it->second;
 		}
 	}
 }
@@ -88,6 +94,7 @@ std::string		Cgi::runCgi(std::string cgiPath) {
 		if(execve(cgiPath.c_str(), NULL, env) == -1)
 		{
 			deleteEnv(env);
+			// FIXME: exit()하고 부모에서 리턴
 			return ("Status: 500\r\n\r\n");
 		}
 	}

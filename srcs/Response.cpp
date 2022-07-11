@@ -67,8 +67,8 @@ void Response::initResponse(Server& server, Request& request) {
     m_bodySize = 0;
     m_contentType = "text/plain";
     m_contentLength = "";
-    m_connection = "Keep-Alive";
-    // m_connection = "Close";
+    // m_connection = "Keep-Alive";
+    m_connection = "Close";
     if (request.isValid()) {
         m_code = 0;
         m_location = findMatchingLocation(server, request);
@@ -90,6 +90,7 @@ void Response::initResponse(Server& server, Request& request) {
         m_code = request.getState();
     m_responseMsg = "";
     m_cgiPath =  m_location._cgipath;
+    // FIXME: cgi_ext 설정 추가
     if (m_requestPath.substr(m_requestPath.find_last_of(".")+1) != "bla" || m_method != "POST")
         m_cgiPath = "";
     m_requestBody = request.getBody();
@@ -357,6 +358,8 @@ void			Response::postMethod(void) {
     if (m_cgiPath != "")
 	{
         std::string retCgi = m_cgi.runCgi(m_cgiPath);
+        // std::cout << "  [ cgi result ] " << std::endl;
+        // std::cout << retCgi.substr(0,100) << std::endl;
         std::vector <std::string> result; 
         result = split(retCgi, '\n');
         for (int i = 0; i < result.size(); i++){
