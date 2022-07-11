@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <algorithm>
 #include "Cgi.hpp"
 //PATH_INFO와 PATH_TRANSLATED, SCRIPT_NAME 주의 
 Cgi::Cgi()
@@ -31,7 +32,16 @@ void					Cgi::init(Location location, Request& request){
     m_env["SERVER_SOFTWARE"] = "Webserv/1.0";
     m_env["SERVER_PORT"] = request.getUri().getPort();
     m_env["SERVER_NAME"] = request.getUri().getHost();
-	
+	std::map<std::string, std::string> all_headers_from_request = request.getAllHeaders();
+	std::map<std::string, std::string>::iterator it;
+	for (it = all_headers_from_request.begin(); it != all_headers_from_request.end(); ++it) {
+		if ( (it->first).find("x-") == 0 ) {
+			std::string tmp;
+			std::transform(it->first.begin(), it->first.end(), tmp.begin(), ::tolower);
+			tmp = "HTTP_" + tmp;
+			m_env[tmp] = it->second;
+		}
+	}
 }
 
 char					**Cgi::envToChar() {
