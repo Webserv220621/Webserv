@@ -1,6 +1,7 @@
 #include <sys/event.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <errno.h>
 #include "Config.hpp"
 #include "Connection.hpp"
 #include "kevent_wrapper.hpp"
@@ -34,20 +35,15 @@ int Webserv::run() {
 		std::cout << "server " << i + 1 << ": " << m_server_list[i].getHost() << ":" << m_server_list[i].getPort() << std::endl;
 	std::cout << "listening..." << std::endl;
 
-	if (monitor_events(kq) < 0)
-		return -1;
-	// ===== May Not Reachable =====
-	for (int i = 0; i < m_server_cnt; ++i)
-		close(m_server_list[i].getFd());
-	return 0;
+	if (monitor_events(kq) < 0) {
+		for (int i = 0; i < m_server_cnt; ++i)
+			close(m_server_list[i].getFd());
+		return 0;
+	}
 }
 
 int Webserv::monitor_events(int kq) {
 	std::map<int, Connection> connection_list;
-	/* fd로부터 Connection객체를 찾기 위해..
-	 * map으로 관리할 때 장점: 구현 간단, 메모리 낭비x
-	 * vector로 관리할 때 장점: 빠른 탐색 */
-
 
 	int MAX_EVENTS = 1000; // 임시 숫자, 해당 숫자 이상 이벤트 발생 시 다음 루프에 처리
 	struct kevent eventlists[MAX_EVENTS];
@@ -55,8 +51,11 @@ int Webserv::monitor_events(int kq) {
 	while (1) {
 		event_count = kevent(kq, NULL, 0, eventlists, MAX_EVENTS, NULL);
 		if (event_count < 0) {
-			std::cout << "kevent()에서 매우 심각한 에러" << std::endl;
+			std::cout << "fatal error on kevent(). terminates server." << std::endl;
 			// 모든 연결 종료
+			std::map<int, Connection>::iterator it;
+			for (it = connection_list.begin(); it != connection_list.end(); ++it)
+				close(it->second.fd);
 			return -1;
 		}
 		// event_count ==0 이면 타임아웃 발생
@@ -81,14 +80,16 @@ int Webserv::monitor_events(int kq) {
 				char buf[rdbytes + 1];
 				int ret = recv(event_fd, &buf, rdbytes, 0);
 				if (ret < 0) {
-					std::cout << "recv()에서 매우 심각한 에러" << std::endl;
-					return -1;
+					// ECONNRESET: 클라이언트측에서 TCP 연결 비정상 종료
+					close(event_fd);
+					connection_list.erase(event_fd);
+					std::cout << "client disconnected unexpectedly." << std::endl;
 				}
 				else if (ret == 0) {
 					// 연결 종료
 					close(event_fd);
 					connection_list.erase(event_fd);
-					// std::cout << "connection closed" << std::endl;
+					std::cout << "connection closed" << std::endl;
 				}
 				else {
 					// 커넥션객체 찾아서 리퀘스트객체에게 전달
@@ -115,20 +116,28 @@ int Webserv::monitor_events(int kq) {
 				Response& response = connection_list[event_fd].response;
 				const std::string& str = response.getResponseMsg();
 				size_t sent_bytes = response.getSentBytes();
-				int ret;
+				size_t ret;
 
 				size_t remain_bytes = str.length() - sent_bytes;
 				ret = send(event_fd, str.substr(sent_bytes, remain_bytes).c_str(), remain_bytes, 0);
-				if (ret <= 0) {
-					std::cout << "send()에서 매우 심각한 에러" << std::endl;
-					return -1;
+				if (ret < 0) {
+					// ENOTSOCK: 클라이언트측에서 TCP 연결 비정상 종료
+					close(event_fd);
+					connection_list.erase(event_fd);
+					std::cout << "client disconnected unexpectedly." << std::endl;
 				}
-				if (ret != remain_bytes) {
-					// std::cout << "sent " << ret << " bytes" << std::endl;
+				else if (ret == 0) {
+					// 클라이언트측에서 연결 종료
+					close(event_fd);
+					connection_list.erase(event_fd);
+					std::cout << "client disconnected." << std::endl;
+				}
+				else if (ret != remain_bytes) {
+					// partial sent occured
+					std::cout << "sent " << ret << " bytes" << std::endl;
 					response.setSentBytes(sent_bytes + ret);
 				}
-
-				if (sent_bytes + ret >= str.length()) {
+				else {
 					// 전송 완료. C-W 삭제.
 					// 연결유지할거면 리퀘스트객체 초기화 후 C-R 추가.
 // TODO: needs test on MacOS
