@@ -78,13 +78,14 @@ void Response::initResponse(Server& server, Request& request) {
         m_query = request.getUri().getQuery();
         m_autoIndex = m_location._autoindex;
         m_method = request.getMethod();
+        m_cgiext = m_location._cgiext;
     }
     else
         m_code = request.getState();
     m_responseMsg = "";
     m_cgiPath =  m_location._cgipath;
     // FIXME: cgi_ext 설정 추가
-    if (m_requestPath.substr(m_requestPath.find_last_of(".")+1) != "bla" || m_method != "POST")
+    if (m_requestPath.substr(m_requestPath.find_last_of(".")+1) != m_cgiext || m_method != "POST")
         m_cgiPath = "";
     m_requestBody = request.getBody();
     m_host =request.getUri().getHost();

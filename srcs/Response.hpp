@@ -42,6 +42,7 @@ class Response {
 		std::string					m_uripath;
 		std::string					m_query;
 		Location					m_location;
+		std::string					m_cgiext;
 
 		Location		findMatchingLocation(Server& server, Request& rq);
 
