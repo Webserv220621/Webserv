@@ -31,7 +31,7 @@ void Webserv::parsingWebserv(std::string path)
     if (checkWrongserv() == 0)//에러 처리 필요
     {
         std::cout << "wrong config" << std::endl;
-        return ;
+        exit (1);
     }
     m_server_cnt = m_server_list.size();
 }

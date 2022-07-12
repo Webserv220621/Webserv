@@ -1,5 +1,6 @@
 #include "Response.hpp"
 #include "common.hpp"
+#include "utils/util.hpp"
 
 Response::Response () {
 }
@@ -93,7 +94,7 @@ void Response::initResponse(Server& server, Request& request) {
     if (m_host == "")
         m_host = server.getHost();
     if (m_port == "")
-        m_port = std::to_string(server.getPort());
+        m_port = ft_to_string(server.getPort());
     cgiWeb.init(m_location, request);
     m_cgi = cgiWeb;
     m_body = "";
@@ -111,7 +112,7 @@ void          Response::setSentBytes(size_t n) {
 std::string		Response::writeStartLine(void){
     std::string	startLine;
 
-    startLine = "HTTP/1.1 " + std::to_string(m_code) + " " + m_errorMsg[m_code] + "\r\n";
+    startLine = "HTTP/1.1 " + ft_to_string(m_code) + " " + m_errorMsg[m_code] + "\r\n";
     return (startLine);
 }
 
@@ -120,7 +121,7 @@ std::string		Response::writeHeader(void)
 	std::string	header = "";
 
     if (m_contentLength == "")
-	    header += "Content-Length: " + std::to_string(m_body.size()) + "\r\n";
+	    header += "Content-Length: " + ft_to_string(m_body.size()) + "\r\n";
     else
         header += "Content-Length: " + m_contentLength + "\r\n";
     if (m_contentType != "")
@@ -280,7 +281,7 @@ void			Response::getMethod(void) {
             if (result[i].find("Status") != std::string::npos)
             {
                 int start = result[i].find(" ");
-                m_code = stoi(result[i].substr(start, 4));
+                m_code = ft_stoi(result[i].substr(start, 4));
             }
             else if (result[i].find("Content-Type") != std::string::npos)
             {
@@ -302,7 +303,7 @@ void			Response::getMethod(void) {
 
 void			Response::headMethod(void) {
     getMethod();
-    m_contentLength = std::to_string(m_body.size());
+    m_contentLength = ft_to_string(m_body.size());
     m_body = "";
 }
 
@@ -352,7 +353,7 @@ void			Response::postMethod(void) {
             if (result[i].find("Status") != std::string::npos)
             {
                 int start = result[i].find(" ");
-                m_code = stoi(result[i].substr(start, 4)); // stoi c98 주의#######
+                m_code = ft_stoi(result[i].substr(start, 4)); 
             }
             else if (result[i].find("Content-Type") != std::string::npos)
             {
@@ -384,7 +385,7 @@ void			Response::putMethod(void) {
             if (result[i].find("Status") != std::string::npos)
             {
                 int start = result[i].find(" ");
-                m_code = stoi(result[i].substr(start, 4));
+                m_code = ft_stoi(result[i].substr(start, 4));
             }
             else if (result[i].find("Content-Type") != std::string::npos)
             {
@@ -504,7 +505,7 @@ void Response::makeErrorResponse(int error)
 	html += "<head>\n";
 	html += "</head>\n";
 	html += "<body>";
-	html += "<h1>" + std::to_string(error) + " ERROR PAGE</h1>";
+	html += "<h1>" + ft_to_string(error) + " ERROR PAGE</h1>";
 	html += "</body>\n";
 	html += "</html>\n";
 
