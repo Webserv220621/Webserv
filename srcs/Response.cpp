@@ -1,22 +1,14 @@
 #include "Response.hpp"
-#include <sys/stat.h> // 파일인지 디렉토리인지 확인
-#include <unistd.h>
-#include <fstream> // 파일 입출력
-#include <sstream> // 파일 입출력
-#include <ios> // file open시 옵션 설정 
-#include <stdio.h> // remove 함수
-#include <dirent.h> // direct 정리 관련
 #include "common.hpp"
 
 Response::Response () {
-    //initResponse();
 }
-//------------tmp--------------
-void Response::setPath(std::string path) {
+
+void            Response::setPath(std::string path) {
     m_requestPath = path;
 }
 
-void Response::setMethod(std::string method) {
+void            Response::setMethod(std::string method) {
     m_method = method;
 }
 
@@ -44,9 +36,9 @@ static std::map<int, std::string> tmp;
 	tmp[505] = "HTTP Version Not Supported";
 	return tmp;
 }
+
 std::map<int, std::string> Response::m_errorMsg = initErrorMap();
 
-//------------tmp--------------
 // getter
 int              Response::getCode(){ return m_code; }
 std::string		Response::getResponseMsg(void) { return m_responseMsg; }
@@ -127,8 +119,10 @@ std::string		Response::writeHeader(void)
 {
 	std::string	header = "";
 
-	header += "Content-Length: " + std::to_string(m_body.size()) + "\r\n";
-	// FIXME: m_contentType이 공백으로 시작하는 듯
+    if (m_contentLength == "")
+	    header += "Content-Length: " + std::to_string(m_body.size()) + "\r\n";
+    else
+        header += "Content-Length: " + m_contentLength + "\r\n";
     if (m_contentType != "")
 		header += "Content-Type: " + m_contentType + "\r\n";
 	if (m_connection != "")
@@ -307,19 +301,14 @@ void			Response::getMethod(void) {
 }
 
 void			Response::headMethod(void) {
-    //FIXME: HEAD요청일 때도 content_length는 GET요청일 때와 동일할 것
     getMethod();
+    m_contentLength = std::to_string(m_body.size());
     m_body = "";
 }
 
 void Response::handlePost() {
     const char  *path;
     std::ofstream writeFile; 
-    
-    //html/tet.txt
-    //html
-    //html/acb/test.txt -> 에러처리?
-
     path = m_requestPath.c_str();
     writeFile.open(path, std::ios_base::out | std::ios_base::trunc);
     writeFile << m_requestBody;
@@ -328,13 +317,12 @@ void Response::handlePost() {
 }
 
 void Response::handlePut() {
-    //FIXME: 이미 파일이 존재하면 append하지 말고 기존 내용 덮어쓸것 -> 336번줄 수정
     const char  *path;
     std::ofstream writeFile; 
     int         is_exist;
     
     path = m_requestPath.c_str();
-    is_exist = access(path, F_OK); // F_OK 옵션은 파일존재여부만 확인
+    is_exist = access(path, F_OK);
     if (is_exist == 0){
         writeFile.open(path, std::ios_base::out);
         writeFile << m_requestBody;
@@ -358,8 +346,6 @@ void			Response::postMethod(void) {
     if (m_cgiPath != "")
 	{
         std::string retCgi = m_cgi.runCgi(m_cgiPath);
-        // std::cout << "  [ cgi result ] " << std::endl;
-        // std::cout << retCgi.substr(0,100) << std::endl;
         std::vector <std::string> result; 
         result = split(retCgi, '\n');
         for (int i = 0; i < result.size(); i++){
@@ -419,16 +405,13 @@ void			Response::putMethod(void) {
         handlePut();
     }
 }
-// 아마도 명령을 성공적으로 수행할 것 같으나 아직은 실행하지 않은 경우 202 (Accepted) 상태 코드.
-// 명령을 수행했고 더 이상 제공할 정보가 없는 경우 204 (No Content) 상태 코드.
-// 명령을 수행했고 응답 메시지가 이후의 상태를 설명하는 경우 200 (OK) 상태 코드.
-//https://developer.mozilla.org/ko/docs/Web/HTTP/Methods/DELETE
+
 void			Response::deleteMethod(void) {
     struct stat buf;
     int         is_dir;
     const char  *path;
     
-    // 없는 경우 에러 처리, 디렉토리이 이거나 파일이 없는 경우 에러처리 해줘야함
+
     path = m_requestPath.c_str();
     stat(path,&buf);
     is_dir = buf.st_mode & S_IFDIR;
@@ -477,7 +460,7 @@ void Response::addDirectory(std::string &body)
     body += "<h1>Index of /autoindex/</h1><hr><br>";
     if ((dir = opendir(m_requestPath.c_str())) == NULL) 
     {
-        return makeErrorResponse(500);//server에서 잘못
+        return makeErrorResponse(500);
     }
     while ((diread = readdir(dir)))
     {
@@ -490,7 +473,7 @@ void Response::addDirectory(std::string &body)
     closedir(dir);
 }
 
-void Response::makeAutoIndex()//200 
+void Response::makeAutoIndex()
 {
     std::string html = "";
 
@@ -499,12 +482,11 @@ void Response::makeAutoIndex()//200
     html += "<head>\n";
     html += "</head>\n";
     html += "<body>\n";
-    addDirectory(html); //directory를 html에 저장
+    addDirectory(html);
     html += "</body>\n";
     html += "</html>\n";
     html += "\r\n";
 
-    m_contentLength = std::to_string(html.size());//
     m_body += html;
     m_contentType = "text/html";
 }
@@ -522,11 +504,10 @@ void Response::makeErrorResponse(int error)
 	html += "<head>\n";
 	html += "</head>\n";
 	html += "<body>";
-	html += "<h1>" + std::to_string(error) + " ERROR PAGE</h1>"; // error ERROR PAGE 출력
+	html += "<h1>" + std::to_string(error) + " ERROR PAGE</h1>";
 	html += "</body>\n";
 	html += "</html>\n";
 
-    // m_contentLength = std::to_string(html.size());//
 	m_body += html;
     m_contentType = "text/html";
 }
@@ -561,28 +542,3 @@ Location Response::findMatchingLocation(Server& s, Request& rq) {
     return rit_best_match->second;
 }
 
-// 헤더 setting 하는 부분도 필요
-// cgi 처리 부분도 필요
-// url 에러 처리도 필요
-/*
-int main() {
-    Response rp;
-    std::vector<std::string> methods = {"GET", "HEAD", "POST", "DELETE", "PUT"};
-    rp.setBody("asd  asd asd테스트중 d asd\n asd asd asd aasd ");
-    rp.setMethod(methods[4]);
-    rp.setPath("./test.txt");
-    rp.runResponse();
-    rp.writeResponseMsg();
-    std::cout << "---Msg---" << std::endl;
-    std::cout << rp.getMsg() << std::endl;
-    std::cout << "---code---" << std::endl;
-    std::cout << rp.getCode() << std::endl;
-
-
-    // struct stat buf;
-    // stat("testd", &buf); // 없으면 0, 있으면 파일 정보 
-    // std::cout << (buf.st_mode & S_IFDIR) << std::endl;
-    // std::cout << (buf.st_mode & S_IFREG) << std::endl;
-    return 0;
-}
-*/
