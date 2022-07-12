@@ -15,7 +15,6 @@ unsigned int millisec(struct timeval& from, struct timeval& to);
 
 template<typename T>
 std::string ft_to_string(const T & value) {
-    std::cout << "to_string" << std::endl;//
     std::ostringstream oss;
     oss << value;
     return oss.str();
