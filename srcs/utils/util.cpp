@@ -1,6 +1,3 @@
-#include <iostream>
-#include <sstream>
-#include <sys/time.h>
 #include "util.hpp"
 
 void ft_split(std::string buf, std::vector<std::string> &info)//다른 곳으로 이동 예정
@@ -57,13 +54,14 @@ unsigned int millisec(struct timeval& from, struct timeval& to) {
 }
 
 template<typename T>
-std::string to_string(const T & value) {
+std::string ft_to_string(const T & value) {
+    std::cout << "to_string" << std::endl;//
     std::ostringstream oss;
     oss << value;
     return oss.str();
 }
 
-int stoi(std::string & s) {
+static int ft_stoi(std::string & s) {
     int i;
     std::istringstream(s) >> i;
     return i;

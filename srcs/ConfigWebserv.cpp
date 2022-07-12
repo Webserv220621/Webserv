@@ -13,7 +13,7 @@ void Webserv::parsingWebserv(std::string path)
     if (!fout.is_open())
     {
         std::cout << "Can't open" << std::endl;
-        return ; //에러 처리 필요
+        exit (1); //에러 처리 필요
     }
     while (std::getline(fout, tmp)) // 한줄씩 읽어서 저장
     {
@@ -31,7 +31,7 @@ void Webserv::parsingWebserv(std::string path)
     if (checkWrongserv() == 0)//에러 처리 필요
     {
         std::cout << "wrong config" << std::endl;
-        return ;
+        exit (1);
     }
     m_server_cnt = m_server_list.size();
 }

@@ -11,6 +11,7 @@
 #include "Config.hpp"
 #include "Request.hpp"
 #include "Cgi.hpp"
+# include "utils/util.hpp"
 
 class Response {
 	private:
