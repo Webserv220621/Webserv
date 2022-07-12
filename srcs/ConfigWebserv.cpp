@@ -9,7 +9,7 @@ void Webserv::parsingWebserv(std::string path)
     std::vector<std::string>::iterator it;
     Server      m_tmpserv;//변수명 변경 예정 
 
-    fout.open(path, std::ofstream::in);
+    fout.open(path.c_str(), std::ofstream::in);
     if (!fout.is_open())
     {
         std::cout << "Can't open" << std::endl;

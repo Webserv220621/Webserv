@@ -1,7 +1,6 @@
 #include <sys/event.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <errno.h>
 #include "Config.hpp"
 #include "Connection.hpp"
 #include "kevent_wrapper.hpp"
@@ -117,7 +116,7 @@ int Webserv::monitor_events(int kq) {
 				Response& response = connection_list[event_fd].response;
 				const std::string& str = response.getResponseMsg();
 				size_t sent_bytes = response.getSentBytes();
-				size_t ret;
+				int ret;
 
 				size_t remain_bytes = str.length() - sent_bytes;
 				ret = send(event_fd, str.substr(sent_bytes, remain_bytes).c_str(), remain_bytes, 0);
@@ -133,7 +132,7 @@ int Webserv::monitor_events(int kq) {
 					connection_list.erase(event_fd);
 					std::cout << "client disconnected." << std::endl;
 				}
-				else if (ret != remain_bytes) {
+				else if (static_cast<size_t>(ret) != remain_bytes) {
 					// partial sent occured
 					std::cout << "sent " << ret << " bytes" << std::endl;
 					response.setSentBytes(sent_bytes + ret);
@@ -141,7 +140,6 @@ int Webserv::monitor_events(int kq) {
 				else {
 					// 전송 완료. C-W 삭제.
 					// 연결유지할거면 리퀘스트객체 초기화 후 C-R 추가.
-// TODO: needs test on MacOS
 #if 1
 					remove_write_filter(kq, event_fd);
 					if (response.isKeepAlive()) {

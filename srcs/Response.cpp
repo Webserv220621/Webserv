@@ -131,7 +131,7 @@ std::string		Response::writeHeader(void)
 		header += "Connection: " + m_connection + "\r\n";
     if (m_code == MOVED_PERMANENTLY)
         header += "Location: http://" + m_host + ":" + m_port + m_uripath + "/" + m_query + "\r\n";
-	header += "\r\n";
+    header += "\r\n";
     return (header);
 }
 
@@ -227,7 +227,7 @@ void             Response::handleGet(void) {
             indexHtml = m_requestPath + "/" + m_indexFile; // <- 주의 
             if (access(indexHtml.c_str(), F_OK) == 0) // 그 디렉토리에index.html이 있다면 => index.html
             {
-                readFile.open(indexHtml, std::ifstream::in);
+                readFile.open(indexHtml.c_str(), std::ifstream::in);
                 readBuf << readFile.rdbuf();
                 m_body = readBuf.str();
                 readFile.close();
