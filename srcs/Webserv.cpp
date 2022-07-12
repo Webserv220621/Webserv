@@ -35,20 +35,15 @@ int Webserv::run() {
 		std::cout << "server " << i + 1 << ": " << m_server_list[i].getHost() << ":" << m_server_list[i].getPort() << std::endl;
 	std::cout << "listening..." << std::endl;
 
-	if (monitor_events(kq) < 0)
-		return -1;
-	// ===== May Not Reachable =====
-	for (int i = 0; i < m_server_cnt; ++i)
-		close(m_server_list[i].getFd());
-	return 0;
+	if (monitor_events(kq) < 0) {
+		for (int i = 0; i < m_server_cnt; ++i)
+			close(m_server_list[i].getFd());
+		return 0;
+	}
 }
 
 int Webserv::monitor_events(int kq) {
 	std::map<int, Connection> connection_list;
-	/* fd로부터 Connection객체를 찾기 위해..
-	 * map으로 관리할 때 장점: 구현 간단, 메모리 낭비x
-	 * vector로 관리할 때 장점: 빠른 탐색 */
-
 
 	int MAX_EVENTS = 1000; // 임시 숫자, 해당 숫자 이상 이벤트 발생 시 다음 루프에 처리
 	struct kevent eventlists[MAX_EVENTS];
@@ -56,8 +51,11 @@ int Webserv::monitor_events(int kq) {
 	while (1) {
 		event_count = kevent(kq, NULL, 0, eventlists, MAX_EVENTS, NULL);
 		if (event_count < 0) {
-			std::cout << "kevent()에서 매우 심각한 에러" << std::endl;
+			std::cout << "fatal error on kevent(). terminates server." << std::endl;
 			// 모든 연결 종료
+			std::map<int, Connection>::iterator it;
+			for (it = connection_list.begin(); it != connection_list.end(); ++it)
+				close(it->second.fd);
 			return -1;
 		}
 		// event_count ==0 이면 타임아웃 발생
