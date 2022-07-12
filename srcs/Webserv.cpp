@@ -112,25 +112,23 @@ int Webserv::monitor_events(int kq) {
 			}
 			else if (eventlists[i].filter == EVFILT_WRITE)
 			{
-				size_t buf_size = eventlists[i].data;
 				Response& response = connection_list[event_fd].response;
 				const std::string& str = response.getResponseMsg();
 				size_t sent_bytes = response.getSentBytes();
 				int ret;
 
-				// 클라이언트 버퍼가 충분하다면 substr없이 전부 전송
-				if (sent_bytes == 0 && buf_size >= str.length())
-					ret = send(event_fd, str.c_str(), str.length(), 0);
-				else {
-					size_t len = std::min(buf_size, str.length() - sent_bytes);
-					ret = send(event_fd, str.substr(sent_bytes, buf_size).c_str(), len, 0);
-					response.setSentBytes(sent_bytes + buf_size);
-				}
+				size_t remain_bytes = str.length() - sent_bytes;
+				ret = send(event_fd, str.substr(sent_bytes, remain_bytes).c_str(), remain_bytes, 0);
 				if (ret <= 0) {
 					std::cout << "send()에서 매우 심각한 에러" << std::endl;
 					return -1;
 				}
-				if (sent_bytes + buf_size >= str.length()) {
+				if (ret != remain_bytes) {
+					// std::cout << "sent " << ret << " bytes" << std::endl;
+					response.setSentBytes(sent_bytes + ret);
+				}
+
+				if (sent_bytes + ret >= str.length()) {
 					// 전송 완료. C-W 삭제.
 					// 연결유지할거면 리퀘스트객체 초기화 후 C-R 추가.
 // TODO: needs test on MacOS
