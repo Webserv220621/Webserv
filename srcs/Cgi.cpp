@@ -58,7 +58,6 @@ std::string				Cgi::runCgi(std::string cgiPath) {
 	pid_t		pid;
 	char		**env;
 	std::string	retCgi;
-	int 		fd[2];
 	int			stat;
 	
 	env = envToChar();

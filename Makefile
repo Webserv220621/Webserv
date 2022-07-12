@@ -16,7 +16,7 @@ OBJS = $(SRCS:.cpp=.o)
 CXX = c++
 #FIXME: enable -Werror -std=c++98
 #CXXFLAGS = -Wall -Wextra -Werror -std=c++98
-CXXFLAGS = -Wall -Wextra -std=c++98
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 
 UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)

@@ -40,6 +40,7 @@ int Webserv::run() {
 			close(m_server_list[i].getFd());
 		return 0;
 	}
+	return 0;
 }
 
 int Webserv::monitor_events(int kq) {
@@ -95,7 +96,7 @@ int Webserv::monitor_events(int kq) {
 					// 커넥션객체 찾아서 리퀘스트객체에게 전달
 					buf[rdbytes] = '\0';
 					Request& rq = connection_list[event_fd].request;
-					int result = rq.append_msg(buf);
+					rq.append_msg(buf);
 					if (! rq.isDone())
 						continue;
 					// std::cout << "<<<<<<<< REQUEST <<<<<<<<" << std::endl;

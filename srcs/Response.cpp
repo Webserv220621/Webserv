@@ -65,7 +65,7 @@ void Response::initResponse(Server& server, Request& request) {
     if (request.isValid()) {
         m_code = 0;
         m_location = findMatchingLocation(server, request);
-        if (m_location._bodysize && request.getBody().size() > m_location._bodysize){
+        if (m_location._bodysize && request.getBody().size() > static_cast<size_t>(m_location._bodysize)){
             m_code = 413;
         }
         m_uripath = request.getUri().getPath();
@@ -277,7 +277,7 @@ void			Response::getMethod(void) {
         std::string retCgi = m_cgi.runCgi(m_cgiPath);
         std::vector <std::string> result;
 	    result = split(retCgi, '\n');
-	    for (int i = 0; i < result.size(); i++){
+	    for (size_t i = 0; i < result.size(); i++){
             if (result[i].find("Status") != std::string::npos)
             {
                 int start = result[i].find(" ");
@@ -349,7 +349,7 @@ void			Response::postMethod(void) {
         std::string retCgi = m_cgi.runCgi(m_cgiPath);
         std::vector <std::string> result; 
         result = split(retCgi, '\n');
-        for (int i = 0; i < result.size(); i++){
+        for (size_t i = 0; i < result.size(); i++){
             if (result[i].find("Status") != std::string::npos)
             {
                 int start = result[i].find(" ");
@@ -381,7 +381,7 @@ void			Response::putMethod(void) {
         std::string retCgi = m_cgi.runCgi(m_cgiPath);
         std::vector <std::string> result; 
 	    result = split(retCgi, '\n');
-	    for (int i = 0; i < result.size(); i++){
+	    for (size_t i = 0; i < result.size(); i++){
             if (result[i].find("Status") != std::string::npos)
             {
                 int start = result[i].find(" ");

@@ -33,7 +33,7 @@ class Request {
 		int m_current_state;
 		bool m_is_done;
 		bool m_is_valid;
-		struct timeval _start_time;
+		//struct timeval _start_time;
 		int _part_cnt;
 
 		int parse_startline(std::string& buf);
