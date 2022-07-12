@@ -81,8 +81,10 @@ int Webserv::monitor_events(int epoll_fd) {
 				char buf[rdbytes];
 				int ret = recv(event_fd, &buf, rdbytes, 0);
 				if (ret < 0) {
-					std::cout << "recv()에서 매우 심각한 에러" << std::endl;
-					return -1;
+					// ECONNRESET: 클라이언트측에서 TCP 연결 비정상 종료
+					close(event_fd);
+					connection_list.erase(event_fd);
+					std::cout << "client disconnected unexpectedly." << std::endl;
 				}
 				else if (ret == 0) {
 					// 연결 종료
@@ -115,24 +117,32 @@ int Webserv::monitor_events(int epoll_fd) {
 				Response& response = connection_list[event_fd].response;
 				const std::string& str = response.getResponseMsg();
 				size_t sent_bytes = response.getSentBytes();
-				int ret;
+				size_t ret;
 
 				size_t remain_bytes = str.length() - sent_bytes;
 				ret = send(event_fd, str.substr(sent_bytes, remain_bytes).c_str(), remain_bytes, 0);
-				if (ret <= 0) {
-					std::cout << "send()에서 매우 심각한 에러" << std::endl;
-					return -1;
+				if (ret < 0) {
+					// ENOTSOCK: 클라이언트측에서 TCP 연결 비정상 종료
+					close(event_fd);
+					connection_list.erase(event_fd);
+					std::cout << "client disconnected unexpectedly." << std::endl;
 				}
-				if (ret != remain_bytes) {
+				else if (ret == 0) {
+					// 클라이언트측에서 연결 종료
+					close(event_fd);
+					connection_list.erase(event_fd);
+					std::cout << "client disconnected." << std::endl;
+				}
+				else if (ret != remain_bytes) {
+					// partial sent occured
 					std::cout << "sent " << ret << " bytes" << std::endl;
 					response.setSentBytes(sent_bytes + ret);
 				}
-
-				if (sent_bytes + ret >= str.length()) {
+				else {
 					// 전송 완료. C-W 삭제.
 					// 연결유지할거면 리퀘스트객체 초기화 후 C-R 추가.
 // TODO: needs test on MacOS
-#if 0
+#if 1
 					remove_write_filter(epoll_fd, event_fd);
 					if (response.isKeepAlive()) {
 						connection_list[event_fd].request.reset();

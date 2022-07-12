@@ -13,7 +13,7 @@ void Webserv::parsingWebserv(std::string path)
     if (!fout.is_open())
     {
         std::cout << "Can't open" << std::endl;
-        exit (1); //에러 처리 필요
+        return ;
     }
     while (std::getline(fout, tmp)) // 한줄씩 읽어서 저장
     {
