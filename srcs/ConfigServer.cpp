@@ -8,6 +8,7 @@ void Server::initLocation(Location *loc)
     loc->_index = "";
     loc->_root = "";
     loc->_cgipath = "";
+    loc->_cgiext = "";
 }
 
 void Server::parsingServer(std::vector<std::string>::iterator it, std::vector<std::string>::iterator end)//begin(), end()
@@ -89,6 +90,11 @@ void Server::parsingServer(std::vector<std::string>::iterator it, std::vector<st
                     it++;
                     t_location._cgipath = checkSemicolon(*it);
                 }
+                else if (*it == "cgi_ext")
+                {
+                    it++;
+                    t_location._cgiext = checkSemicolon(*it);                
+                }
             }
             t_location._prefix = tmp;
             m_location.insert(make_pair(tmp, t_location));
@@ -140,6 +146,7 @@ void Server::printServer()//출력용
         std::cout << "root : " << it->second._root << std::endl;
         std::cout << "index : " << it->second._index << std::endl;
         std::cout << "cgi_path : " << it->second._cgipath << std::endl;
+        std::cout << "cgi_ext : " << it->second._cgiext << std::endl;
         std::cout << "bodysize : " << it->second._bodysize << std::endl;
         std::cout << "autoindex : " << it->second._autoindex << std::endl;
         std::cout << "allowmethod : ";

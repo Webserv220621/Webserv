@@ -16,6 +16,7 @@ struct Location
     std::string _root;
     std::string _index;
     std::string _cgipath;
+    std::string _cgiext;
     std::vector<std::string> _allowmethod;
     int _bodysize;
     int _autoindex; //off,init = 0, on = 1
