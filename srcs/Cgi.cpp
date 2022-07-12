@@ -1,13 +1,5 @@
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/wait.h>
+
 #include "Cgi.hpp"
-//PATH_INFO와 PATH_TRANSLATED, SCRIPT_NAME 주의 
-Cgi::Cgi()
-{
-}
 
 void					Cgi::init(Location location, Request& request){
 	m_requestMsg = request.getBody();
@@ -17,8 +9,8 @@ void					Cgi::init(Location location, Request& request){
     m_env["CONTENT_LENGTH"] = std::to_string(request.getBody().length());
 
     m_env["SCRIPT_FILENAME"] = location._root + request.getUri().getPath();
-    m_env["SCRIPT_NAME"] = request.getUri().getPath(); //실행할 파일 분리 필요 
-    m_env["PATH_INFO"] =  request.getUri().getPath();   ///foo/bar
+    m_env["SCRIPT_NAME"] = request.getUri().getPath();
+    m_env["PATH_INFO"] =  request.getUri().getPath();
 	m_env["PATH_TRANSLATED"] = location._root + request.getUri().getPath();
 	m_env["REQUEST_URI"] = request.getUri().getPath() + request.getUri().getQuery();
     m_env["SERVER_PROTOCOL"] = "HTTP/1.1";
@@ -62,61 +54,55 @@ char					**Cgi::envToChar() {
 	return newEnv;
 }
 
-std::string		Cgi::runCgi(std::string cgiPath) {
+std::string				Cgi::runCgi(std::string cgiPath) {
 	pid_t		pid;
 	char		**env;
 	std::string	retCgi;
 	int 		fd[2];
+	int			stat;
 	
 	env = envToChar();
 	FILE *tmp = tmpfile();
 	FILE *msg = tmpfile();
 	int storeMsg = fileno(msg);
 	int cgiInput = fileno(tmp);
-	// std::cout << "Size recieved: " << m_requestMsg.size() << std::endl;
-	write(cgiInput, m_requestMsg.c_str(), m_requestMsg.size());
+	if (write(cgiInput, m_requestMsg.c_str(), m_requestMsg.size()) == -1)
+		return ("Status: 500\r\n\r\n");
 	lseek(cgiInput, 0, 0);
-	// if (pipe(fd) == -1)
-	// {
-	// 	deleteEnv(env);
-	// 	return ("Status: 500\r\n\r\n");
-	// }
 	if ((pid= fork()) == -1)
 	{
 		deleteEnv(env);
 		return ("Status: 500\r\n\r\n");
 	}
-	else if (pid == 0) // 자식 
+	else if (pid == 0)
 	{
-		// close(fd[0]);
 		dup2(cgiInput, STDIN_FILENO);
 		dup2(storeMsg, STDOUT_FILENO);
 		if(execve(cgiPath.c_str(), NULL, env) == -1)
 		{
 			deleteEnv(env);
-			// FIXME: exit()하고 부모에서 리턴
-			return ("Status: 500\r\n\r\n");
+			exit(1);	
 		}
 	}
-	else // 부모
+	else
 	{
-		wait(NULL);
-		char	buffer[32768] = {0}; // 32kb
-		// close(fd[1]);
+		wait(&stat);
+		if (WIFSIGNALED(stat))
+			return ("Status: 500\r\n\r\n");
+		char	buffer[32768] = {0};
 		lseek(storeMsg, 0, 0);
 		while (read(storeMsg, buffer, 32767) > 0){
 			retCgi += buffer;
 			memset(buffer, 0, 32768);
 		}
 	}
-	// close(fd[0]);
 	fclose(tmp);
 	fclose(msg);
 	deleteEnv(env);
 	return (retCgi);
 }
 
-void Cgi::deleteEnv(char ** env){
+void 					Cgi::deleteEnv(char ** env){
 	if (env != NULL)
 	{
 		for (int i = 0; env[i]; i++)
@@ -124,19 +110,3 @@ void Cgi::deleteEnv(char ** env){
 		delete[] env;
 	}
 }
-
-/*
-int main(){
-    Cgi c;
-
-    std::string buf;
-    buf = c.runCgi("../html/cgi/cgi_tester");
-	std::cout << buf; 
-    return (0);
-}
-*/
-// // ----
-// // Status: 200 OK
-// // Content-Type: text/html; charset=utf-8
-// // 빈칸
-// // ---

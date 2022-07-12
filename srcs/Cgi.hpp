@@ -1,10 +1,15 @@
 #ifndef CGI_HPP
 # define CGI_HPP
 
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/wait.h>
+#include <string>
 #include "Config.hpp"
 #include "Request.hpp"
-# include <string>
-#include <unistd.h>
+
 
 class Cgi {
     private:
@@ -13,7 +18,7 @@ class Cgi {
 		std::string							m_requestMsg;
 
 	public:
-		Cgi();
+		Cgi()  {};
 		~Cgi() {};
 		std::string		                    runCgi(std::string cgiPath);
 		void								deleteEnv(char **env);
