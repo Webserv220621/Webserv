@@ -281,7 +281,7 @@ void			Response::getMethod(void) {
             if (result[i].find("Status") != std::string::npos)
             {
                 int start = result[i].find(" ");
-                m_code = stoi(result[i].substr(start, 4));
+                m_code = ft_stoi(result[i].substr(start, 4));
             }
             else if (result[i].find("Content-Type") != std::string::npos)
             {
@@ -353,7 +353,7 @@ void			Response::postMethod(void) {
             if (result[i].find("Status") != std::string::npos)
             {
                 int start = result[i].find(" ");
-                m_code = stoi(result[i].substr(start, 4)); 
+                m_code = ft_stoi(result[i].substr(start, 4)); 
             }
             else if (result[i].find("Content-Type") != std::string::npos)
             {
@@ -385,7 +385,7 @@ void			Response::putMethod(void) {
             if (result[i].find("Status") != std::string::npos)
             {
                 int start = result[i].find(" ");
-                m_code = stoi(result[i].substr(start, 4));
+                m_code = ft_stoi(result[i].substr(start, 4));
             }
             else if (result[i].find("Content-Type") != std::string::npos)
             {

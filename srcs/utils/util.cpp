@@ -52,17 +52,3 @@ void prn_prepend(const std::string& str, const std::string& ch) {
 unsigned int millisec(struct timeval& from, struct timeval& to) {
     return ((to.tv_sec - from.tv_sec) * 1000 + (to.tv_usec - from.tv_usec) / 1000);
 }
-
-template<typename T>
-std::string ft_to_string(const T & value) {
-    std::cout << "to_string" << std::endl;//
-    std::ostringstream oss;
-    oss << value;
-    return oss.str();
-}
-
-static int ft_stoi(std::string & s) {
-    int i;
-    std::istringstream(s) >> i;
-    return i;
-}
