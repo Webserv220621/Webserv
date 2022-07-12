@@ -236,7 +236,7 @@ void             Response::handleGet(void) {
                 m_body = readBuf.str();
                 readFile.close();
                 m_code = 200;
-                m_contentType = "txt/html";
+                m_contentType = "text/html";
             }
             else
             {
