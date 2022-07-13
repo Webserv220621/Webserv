@@ -54,10 +54,9 @@ char					**Cgi::envToChar() {
 	return newEnv;
 }
 
-std::string				Cgi::runCgi(std::string cgiPath) {
+void					Cgi::runCgi(std::string cgiPath, std::string& retCgi) {
 	pid_t		pid;
 	char		**env;
-	std::string	retCgi;
 	int			stat;
 	
 #if DEBUG
@@ -68,13 +67,16 @@ std::string				Cgi::runCgi(std::string cgiPath) {
 	FILE *msg = tmpfile();
 	int storeMsg = fileno(msg);
 	int cgiInput = fileno(tmp);
-	if (write(cgiInput, m_requestMsg.c_str(), m_requestMsg.size()) == -1)
-		return ("Status: 500\r\n\r\n");
+	if (write(cgiInput, m_requestMsg.c_str(), m_requestMsg.size()) == -1) {
+		retCgi = "Status: 500\r\n\r\n";
+		return;
+	}
 	lseek(cgiInput, 0, 0);
 	if ((pid= fork()) == -1)
 	{
 		deleteEnv(env);
-		return ("Status: 500\r\n\r\n");
+		retCgi = "Status: 500\r\n\r\n";
+		return;
 	}
 	else if (pid == 0)
 	{
@@ -89,8 +91,10 @@ std::string				Cgi::runCgi(std::string cgiPath) {
 	else
 	{
 		wait(&stat);
-		if (WIFSIGNALED(stat))
-			return ("Status: 500\r\n\r\n");
+		if (WIFSIGNALED(stat)) {
+			retCgi = "Status: 500\r\n\r\n";
+			return;
+		}
 		char	buffer[32768] = {0};
 		lseek(storeMsg, 0, 0);
 		while (read(storeMsg, buffer, 32767) > 0){
@@ -107,7 +111,7 @@ std::string				Cgi::runCgi(std::string cgiPath) {
 	unsigned int elapsed = millisec(_start_time, current);
 	std::cout << "   [ cgi process elapsed: " << elapsed << "ms ]" << std::endl;
 #endif
-	return (retCgi);
+	return;
 }
 
 void 					Cgi::deleteEnv(char ** env){

@@ -26,7 +26,7 @@ class Cgi {
 	public:
 		Cgi()  {};
 		~Cgi() {};
-		std::string		                    runCgi(std::string cgiPath);
+		void			                    runCgi(std::string cgiPath, std::string& retCgi);
 		void								deleteEnv(char **env);
 		void								init(Location location, Request& request);
 

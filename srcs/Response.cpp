@@ -260,7 +260,7 @@ void             Response::handleGet(void) {
     }
 }
 
-std::vector<std::string> split(std::string input, char delimiter) {
+std::vector<std::string> split(std::string& input, char delimiter) {
     std::vector<std::string> answer;
     std::stringstream ss(input);
     std::string temp;
@@ -275,7 +275,8 @@ std::vector<std::string> split(std::string input, char delimiter) {
 void			Response::getMethod(void) {
     if (m_cgiPath != "")
 	{   
-        std::string retCgi = m_cgi.runCgi(m_cgiPath);
+        std::string retCgi;
+        m_cgi.runCgi(m_cgiPath, retCgi);
         std::vector <std::string> result;
 	    result = split(retCgi, '\n');
 	    for (size_t i = 0; i < result.size(); i++){
@@ -347,7 +348,8 @@ void			Response::postMethod(void) {
     }
     if (m_cgiPath != "")
 	{
-        std::string retCgi = m_cgi.runCgi(m_cgiPath);
+        std::string retCgi;
+        m_cgi.runCgi(m_cgiPath, retCgi);
         __LOG("  [  cgi result ] ");
         __LOG(retCgi.substr(0,100));
         std::vector <std::string> result; 
@@ -381,7 +383,8 @@ void			Response::postMethod(void) {
 void			Response::putMethod(void) {
     if (m_cgiPath != "")
 	{
-        std::string retCgi = m_cgi.runCgi(m_cgiPath);
+        std::string retCgi;
+        m_cgi.runCgi(m_cgiPath, retCgi);
         std::vector <std::string> result; 
 	    result = split(retCgi, '\n');
 	    for (size_t i = 0; i < result.size(); i++){
