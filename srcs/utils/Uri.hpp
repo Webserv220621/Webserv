@@ -18,7 +18,6 @@ class Uri {
 		void setPath();
 		void setQuery();
 
-		Uri(const Uri& other);
 
 	public:
 		Uri();

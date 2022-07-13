@@ -34,20 +34,16 @@ int Webserv::run() {
 		std::cout << "server " << i + 1 << ": " << m_server_list[i].getHost() << ":" << m_server_list[i].getPort() << std::endl;
 	std::cout << "listening..." << std::endl;
 
-	if (monitor_events(epoll_fd) < 0)
-		return -1;
-	// ===== May Not Reachable =====
-	for (int i = 0; i < m_server_cnt; ++i)
-		close(m_server_list[i].getFd());
+	if (monitor_events(epoll_fd) < 0) {
+		for (int i = 0; i < m_server_cnt; ++i)
+			close(m_server_list[i].getFd());
+		return 0;
+	}
 	return 0;
 }
 
 int Webserv::monitor_events(int epoll_fd) {
 	std::map<int, Connection> connection_list;
-	/* fd로부터 Connection객체를 찾기 위해..
-	 * map으로 관리할 때 장점: 구현 간단, 메모리 낭비x
-	 * vector로 관리할 때 장점: 빠른 탐색 */
-
 
 	int MAX_EVENTS = 1000; // 임시 숫자, 해당 숫자 이상 이벤트 발생 시 다음 루프에 처리
 	struct epoll_event eventlists[MAX_EVENTS];
@@ -55,8 +51,11 @@ int Webserv::monitor_events(int epoll_fd) {
 	while (1) {
 		event_count = epoll_wait(epoll_fd, eventlists, MAX_EVENTS, -1);
 		if (event_count < 0) {
-			std::cout << "kevent()에서 매우 심각한 에러" << std::endl;
+			std::cout << "fatal error on kevent(). terminates server." << std::endl;
 			// 모든 연결 종료
+			std::map<int, Connection>::iterator it;
+			for (it = connection_list.begin(); it != connection_list.end(); ++it)
+				close(it->second.fd);
 			return -1;
 		}
 		// event_count ==0 이면 타임아웃 발생
@@ -70,7 +69,7 @@ int Webserv::monitor_events(int epoll_fd) {
 					std::cout << "can't accept new connection request" << std::endl;
 					continue;
 				}
-				std::cout << "new connection on server " << event_fd - 3 << std::endl;
+				__LOG("new connection on server " << event_fd - 3);
 				// connect_fd와 커넥션객체 연결해서 저장
 				connection_list[connect_socket_fd].fd = connect_socket_fd;
 				connection_list[connect_socket_fd].server = m_server_list[server_idx];
@@ -84,25 +83,27 @@ int Webserv::monitor_events(int epoll_fd) {
 					// ECONNRESET: 클라이언트측에서 TCP 연결 비정상 종료
 					close(event_fd);
 					connection_list.erase(event_fd);
-					std::cout << "client disconnected unexpectedly." << std::endl;
+					__LOG("client disconnected unexpectedly.");
 				}
 				else if (ret == 0) {
 					// 연결 종료
 					close(event_fd);
 					connection_list.erase(event_fd);
-					std::cout << "connection closed" << std::endl;
+					__LOG("connection closed");
 				}
 				else {
 					// 커넥션객체 찾아서 리퀘스트객체에게 전달
 					buf[ret] = '\0';
 					Request& rq = connection_list[event_fd].request;
-					int result = rq.append_msg(buf);
+					rq.append_msg(buf);
 					if (! rq.isDone())
 						continue;
+#if DEBUG
 					std::cout << "<<<<<<<< REQUEST <<<<<<<<" << std::endl;
 					prn_prepend(rq.getRaw(), "<<< ");
 					std::cout << "<<< body size=" << rq.getBody().size() << std::endl;
 					std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
+#endif
 					// 수신 완료됐으면 리스폰스 메시지 생성
 					Response& resp = connection_list[event_fd].response;
 					resp.initResponse(connection_list[event_fd].server, connection_list[event_fd].request);
@@ -117,7 +118,7 @@ int Webserv::monitor_events(int epoll_fd) {
 				Response& response = connection_list[event_fd].response;
 				const std::string& str = response.getResponseMsg();
 				size_t sent_bytes = response.getSentBytes();
-				size_t ret;
+				int ret;
 
 				size_t remain_bytes = str.length() - sent_bytes;
 				ret = send(event_fd, str.substr(sent_bytes, remain_bytes).c_str(), remain_bytes, 0);
@@ -125,23 +126,22 @@ int Webserv::monitor_events(int epoll_fd) {
 					// ENOTSOCK: 클라이언트측에서 TCP 연결 비정상 종료
 					close(event_fd);
 					connection_list.erase(event_fd);
-					std::cout << "client disconnected unexpectedly." << std::endl;
+					__LOG("client disconnected unexpectedly.");
 				}
 				else if (ret == 0) {
 					// 클라이언트측에서 연결 종료
 					close(event_fd);
 					connection_list.erase(event_fd);
-					std::cout << "client disconnected." << std::endl;
+					__LOG("client disconnected.");
 				}
-				else if (ret != remain_bytes) {
+				else if (static_cast<size_t>(ret) != remain_bytes) {
 					// partial sent occured
-					std::cout << "sent " << ret << " bytes" << std::endl;
+					__LOG("sent " << ret << " bytes");
 					response.setSentBytes(sent_bytes + ret);
 				}
 				else {
 					// 전송 완료. C-W 삭제.
 					// 연결유지할거면 리퀘스트객체 초기화 후 C-R 추가.
-// TODO: needs test on MacOS
 #if 1
 					remove_write_filter(epoll_fd, event_fd);
 					if (response.isKeepAlive()) {
@@ -151,12 +151,12 @@ int Webserv::monitor_events(int epoll_fd) {
 					else {
 						connection_list.erase(event_fd);
 						close(event_fd);
-						std::cout << "connection closed" << std::endl;
+						__LOG("connection closed");
 					}
 #else
 					connection_list.erase(event_fd);
 					close(event_fd);
-					std::cout << "connection closed" << std::endl;
+					__LOG("connection closed");
 #endif
 				}
 			}

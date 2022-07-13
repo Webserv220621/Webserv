@@ -6,7 +6,7 @@ void					Cgi::init(Location location, Request& request){
     m_env["QUERY_STRING"] = request.getUri().getQuery();
     m_env["REQUEST_METHOD"] = request.getMethod();
     m_env["CONTENT_TYPE"] = request.getHeaderValue("Content-Type");
-    m_env["CONTENT_LENGTH"] = std::to_string(request.getBody().length());
+    m_env["CONTENT_LENGTH"] = ft_to_string(request.getBody().length());
 
     m_env["SCRIPT_FILENAME"] = location._root + request.getUri().getPath();
     m_env["SCRIPT_NAME"] = request.getUri().getPath();
@@ -77,7 +77,7 @@ std::string				Cgi::runCgi(std::string cgiPath) {
 	{
 		dup2(cgiInput, STDIN_FILENO);
 		dup2(storeMsg, STDOUT_FILENO);
-		if(execve(cgiPath.c_str(), NULL, env) == -1)
+		if(execve(cgiPath.c_str(), (char**){NULL}, env) == -1)
 		{
 			deleteEnv(env);
 			exit(1);	
