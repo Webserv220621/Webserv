@@ -57,53 +57,69 @@ char					**Cgi::envToChar() {
 void					Cgi::runCgi(std::string cgiPath, std::string& retCgi) {
 	pid_t		pid;
 	char		**env;
-	int			stat;
+	int 		pipe_to_cgi[2];
+	int 		pipe_from_cgi[2];
 	
 #if DEBUG
     gettimeofday(&_start_time, NULL);
 #endif
 	env = envToChar();
-	FILE *tmp = tmpfile();
-	FILE *msg = tmpfile();
-	int storeMsg = fileno(msg);
-	int cgiInput = fileno(tmp);
-	if (write(cgiInput, m_requestMsg.c_str(), m_requestMsg.size()) == -1) {
+	if (pipe(pipe_to_cgi) == -1)
+	{
+		deleteEnv(env);
 		retCgi = "Status: 500\r\n\r\n";
 		return;
 	}
-	lseek(cgiInput, 0, 0);
+	if (pipe(pipe_from_cgi) == -1)
+	{
+		deleteEnv(env);
+		retCgi = "Status: 500\r\n\r\n";
+		return;
+	}
 	if ((pid= fork()) == -1)
 	{
 		deleteEnv(env);
 		retCgi = "Status: 500\r\n\r\n";
 		return;
 	}
-	else if (pid == 0)
+	else if (pid == 0) // 자식 
 	{
-		dup2(cgiInput, STDIN_FILENO);
-		dup2(storeMsg, STDOUT_FILENO);
+		close(pipe_from_cgi[0]);
+		close(pipe_to_cgi[1]);
+		dup2(pipe_to_cgi[0], STDIN_FILENO);
+		dup2(pipe_from_cgi[1], STDOUT_FILENO);
 		if(execve(cgiPath.c_str(), (char**){NULL}, env) == -1)
 		{
 			deleteEnv(env);
-			exit(1);	
+			exit(1);
 		}
 	}
-	else
+	else // 부모
 	{
-		wait(&stat);
-		if (WIFSIGNALED(stat)) {
-			retCgi = "Status: 500\r\n\r\n";
-			return;
-		}
-		char	buffer[32768] = {0};
-		lseek(storeMsg, 0, 0);
-		while (read(storeMsg, buffer, 32767) > 0){
+		close(pipe_from_cgi[1]);
+		close(pipe_to_cgi[0]);
+		size_t msglen = m_requestMsg.length();
+		char buffer[32768];
+		size_t sent_idx = 0;
+		while (1) {
+			size_t part_len = 32767;
+			if (sent_idx + part_len > msglen)
+				part_len = msglen - sent_idx;
+			// 전송용 파이프의 write end에 쓰기
+			write(pipe_to_cgi[1], m_requestMsg.substr(sent_idx, part_len).c_str(), part_len);
+			sent_idx += part_len;
+			// 전부 보냈으면 전송용 파이프의 write end를 닫는다
+			if (sent_idx == msglen)
+				close(pipe_to_cgi[1]);
+			// 수신용 파이프의 read end로부터 읽기
+			int ret = read(pipe_from_cgi[0], buffer, 32767);
+			if (ret == 0)
+				break;
+			buffer[ret] = '\0';
 			retCgi += buffer;
-			memset(buffer, 0, 32768);
 		}
 	}
-	fclose(tmp);
-	fclose(msg);
+	close(pipe_from_cgi[0]);
 	deleteEnv(env);
 #if DEBUG
 	struct timeval current;
