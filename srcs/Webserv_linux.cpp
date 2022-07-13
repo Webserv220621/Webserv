@@ -69,7 +69,7 @@ int Webserv::monitor_events(int epoll_fd) {
 					std::cout << "can't accept new connection request" << std::endl;
 					continue;
 				}
-				std::cout << "new connection on server " << event_fd - 3 << std::endl;
+				__LOG("new connection on server " << event_fd - 3);
 				// connect_fd와 커넥션객체 연결해서 저장
 				connection_list[connect_socket_fd].fd = connect_socket_fd;
 				connection_list[connect_socket_fd].server = m_server_list[server_idx];
@@ -83,13 +83,13 @@ int Webserv::monitor_events(int epoll_fd) {
 					// ECONNRESET: 클라이언트측에서 TCP 연결 비정상 종료
 					close(event_fd);
 					connection_list.erase(event_fd);
-					std::cout << "client disconnected unexpectedly." << std::endl;
+					__LOG("client disconnected unexpectedly.");
 				}
 				else if (ret == 0) {
 					// 연결 종료
 					close(event_fd);
 					connection_list.erase(event_fd);
-					std::cout << "connection closed" << std::endl;
+					__LOG("connection closed");
 				}
 				else {
 					// 커넥션객체 찾아서 리퀘스트객체에게 전달
@@ -98,10 +98,12 @@ int Webserv::monitor_events(int epoll_fd) {
 					rq.append_msg(buf);
 					if (! rq.isDone())
 						continue;
+#if DEBUG
 					std::cout << "<<<<<<<< REQUEST <<<<<<<<" << std::endl;
 					prn_prepend(rq.getRaw(), "<<< ");
 					std::cout << "<<< body size=" << rq.getBody().size() << std::endl;
 					std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
+#endif
 					// 수신 완료됐으면 리스폰스 메시지 생성
 					Response& resp = connection_list[event_fd].response;
 					resp.initResponse(connection_list[event_fd].server, connection_list[event_fd].request);
@@ -124,17 +126,17 @@ int Webserv::monitor_events(int epoll_fd) {
 					// ENOTSOCK: 클라이언트측에서 TCP 연결 비정상 종료
 					close(event_fd);
 					connection_list.erase(event_fd);
-					std::cout << "client disconnected unexpectedly." << std::endl;
+					__LOG("client disconnected unexpectedly.");
 				}
 				else if (ret == 0) {
 					// 클라이언트측에서 연결 종료
 					close(event_fd);
 					connection_list.erase(event_fd);
-					std::cout << "client disconnected." << std::endl;
+					__LOG("client disconnected.");
 				}
 				else if (static_cast<size_t>(ret) != remain_bytes) {
 					// partial sent occured
-					std::cout << "sent " << ret << " bytes" << std::endl;
+					__LOG("sent " << ret << " bytes");
 					response.setSentBytes(sent_bytes + ret);
 				}
 				else {
@@ -149,12 +151,12 @@ int Webserv::monitor_events(int epoll_fd) {
 					else {
 						connection_list.erase(event_fd);
 						close(event_fd);
-						std::cout << "connection closed" << std::endl;
+						__LOG("connection closed");
 					}
 #else
 					connection_list.erase(event_fd);
 					close(event_fd);
-					std::cout << "connection closed" << std::endl;
+					__LOG("connection closed");
 #endif
 				}
 			}

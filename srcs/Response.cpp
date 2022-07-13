@@ -61,7 +61,6 @@ void Response::initResponse(Server& server, Request& request) {
     m_contentType = "text/plain";
     m_contentLength = "";
     m_connection = "Keep-Alive";
-    // m_connection = "Close";
     if (request.isValid()) {
         m_code = 0;
         m_location = findMatchingLocation(server, request);
@@ -84,7 +83,6 @@ void Response::initResponse(Server& server, Request& request) {
         m_code = request.getState();
     m_responseMsg = "";
     m_cgiPath =  m_location._cgipath;
-    // FIXME: cgi_ext 설정 추가
     if (m_requestPath.substr(m_requestPath.find_last_of(".")+1) != m_cgiext || m_method != "POST")
         m_cgiPath = "";
     m_requestBody = request.getBody();
@@ -101,9 +99,9 @@ void Response::initResponse(Server& server, Request& request) {
     m_body = "";
     m_sent_bytes = 0;
     m_indexFile = m_location._index;
-    // std::cout << "     [ param ]" << std::endl;
-    // std::cout << " method: " << m_method << std::endl;
-    // std::cout << " targetPath: " << m_requestPath << std::endl;
+    __LOG("     [ param ]");
+    __LOG(" method: " << m_method);
+    __LOG(" targetPath: " << m_requestPath);
 }
 
 void          Response::setSentBytes(size_t n) {
@@ -441,9 +439,11 @@ std::string Response::writeBody () {
 void Response::writeResponseMsg(void) {
     m_responseMsg += writeStartLine();
     m_responseMsg += writeHeader();
-    // std::cout << ">>>>>>>> RESPONSE >>>>>>>>" << std::endl;
-    // prn_prepend(m_responseMsg, ">>> ");
-    // std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>\n\n" << std::endl;
+#if DEBUG
+    std::cout << ">>>>>>>> RESPONSE >>>>>>>>" << std::endl;
+    prn_prepend(m_responseMsg, ">>> ");
+    std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>\n\n" << std::endl;
+#endif
     if (m_body != "")
         m_responseMsg += m_body;
 

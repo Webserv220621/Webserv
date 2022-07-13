@@ -7,6 +7,17 @@
 #include <iostream>
 #include <sys/time.h>
 
+#ifndef DEBUG
+# define DEBUG 0
+#endif
+
+#define __LOG(fmt) \
+    if (DEBUG) { \
+        std::ostringstream ost; \
+        ost << fmt; \
+        std::cout << ost.str() << std::endl; \
+    } else {}
+
 std::string checkSemicolon(std::string input);
 void ft_split(std::string buf, std::vector<std::string> &info);
 std::string& trimSpace(std::string& str);

@@ -11,12 +11,11 @@ SRCFILES= ConfigServer.cpp \
 		  utils/Uri.cpp \
 		  utils/util.cpp
 SRCS = $(addprefix $(SRCDIR), $(SRCFILES))
-
 OBJS = $(SRCS:.cpp=.o)
+
 CXX = c++
-#FIXME: enable -Werror -std=c++98
-#CXXFLAGS = -Wall -Wextra -Werror -std=c++98
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98
+
 
 UNAME := $(shell uname)
 ifeq ($(UNAME), Darwin)
@@ -26,7 +25,10 @@ else
 	CXXFLAGS += -D LINUX
 endif
 
+
 .PHONY: all clean fclean re
+
+
 
 all: $(NAME)
 
@@ -43,3 +45,9 @@ fclean: clean
 	rm -rf $(NAME)
 
 re: fclean all
+
+debug: CXXFLAGS += -D DEBUG
+debug: clean all
+
+leaktest: CXXFLAGS += -g3 -fsanitize=address
+leaktest: clean all
