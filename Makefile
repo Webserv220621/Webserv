@@ -1,4 +1,4 @@
-NAME = a.out
+NAME = webserv
 SRCDIR	= srcs/
 SRCFILES= ConfigServer.cpp \
           ConfigWebserv.cpp \
