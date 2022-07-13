@@ -55,7 +55,9 @@ bool            Response::isKeepAlive() {
 
 void Response::initResponse(Server& server, Request& request) {
     Cgi cgiWeb;
-
+#if DEBUG
+    gettimeofday(&_start_time, NULL);
+#endif
     m_requestPath = "";
     m_bodySize = 0;
     m_contentType = "text/plain";
@@ -346,6 +348,8 @@ void			Response::postMethod(void) {
     if (m_cgiPath != "")
 	{
         std::string retCgi = m_cgi.runCgi(m_cgiPath);
+        __LOG("  [  cgi result ] ");
+        __LOG(retCgi.substr(0,100));
         std::vector <std::string> result; 
         result = split(retCgi, '\n');
         for (size_t i = 0; i < result.size(); i++){
@@ -440,13 +444,18 @@ void Response::writeResponseMsg(void) {
     m_responseMsg += writeStartLine();
     m_responseMsg += writeHeader();
 #if DEBUG
-    std::cout << ">>>>>>>> RESPONSE >>>>>>>>" << std::endl;
+    __LOG(">>>>>>>> RESPONSE >>>>>>>>");
     prn_prepend(m_responseMsg, ">>> ");
-    std::cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>\n\n" << std::endl;
+    __LOG(">>>>>>>>>>>>>>>>>>>>>>>>>>\n\n");
 #endif
     if (m_body != "")
         m_responseMsg += m_body;
-
+#if DEBUG
+	struct timeval current;
+	gettimeofday(&current, NULL);
+	unsigned int elapsed = millisec(_start_time, current);
+	std::cout << "   [ response elapsed: " << elapsed << "ms ]" << std::endl;
+#endif
 }
 
 void Response::addDirectory(std::string &body)

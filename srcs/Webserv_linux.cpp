@@ -99,10 +99,10 @@ int Webserv::monitor_events(int epoll_fd) {
 					if (! rq.isDone())
 						continue;
 #if DEBUG
-					std::cout << "<<<<<<<< REQUEST <<<<<<<<" << std::endl;
+					__LOG("<<<<<<<< REQUEST <<<<<<<<");
 					prn_prepend(rq.getRaw(), "<<< ");
-					std::cout << "<<< body size=" << rq.getBody().size() << std::endl;
-					std::cout << "<<<<<<<<<<<<<<<<<<<<<<<<<<" << std::endl;
+					__LOG("<<< body size=" << rq.getBody().size());
+					__LOG("<<<<<<<<<<<<<<<<<<<<<<<<<<");
 #endif
 					// 수신 완료됐으면 리스폰스 메시지 생성
 					Response& resp = connection_list[event_fd].response;

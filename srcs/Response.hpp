@@ -8,6 +8,9 @@
 #include <ios> // file open시 옵션 설정 
 #include <stdio.h> // remove 함수
 #include <dirent.h> // direct 정리 관련
+#if DEBUG
+# include <sys/time.h>
+#endif
 #include "Config.hpp"
 #include "Request.hpp"
 #include "Cgi.hpp"
@@ -15,7 +18,9 @@
 
 class Response {
 	private:
-
+#if DEBUG
+		struct timeval _start_time;
+#endif
 		std::string 				m_requestPath; // 매핑된 filepath
 		std::string 				m_requestBody; // 있다면
 		size_t						m_bodySize;		// contentlength

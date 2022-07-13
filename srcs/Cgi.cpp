@@ -60,6 +60,9 @@ std::string				Cgi::runCgi(std::string cgiPath) {
 	std::string	retCgi;
 	int			stat;
 	
+#if DEBUG
+    gettimeofday(&_start_time, NULL);
+#endif
 	env = envToChar();
 	FILE *tmp = tmpfile();
 	FILE *msg = tmpfile();
@@ -98,6 +101,12 @@ std::string				Cgi::runCgi(std::string cgiPath) {
 	fclose(tmp);
 	fclose(msg);
 	deleteEnv(env);
+#if DEBUG
+	struct timeval current;
+	gettimeofday(&current, NULL);
+	unsigned int elapsed = millisec(_start_time, current);
+	std::cout << "   [ cgi process elapsed: " << elapsed << "ms ]" << std::endl;
+#endif
 	return (retCgi);
 }
 

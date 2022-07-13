@@ -7,12 +7,18 @@
 #include <string.h>
 #include <sys/wait.h>
 #include <string>
+#if DEBUG
+# include <sys/time.h>
+#endif
 #include "Config.hpp"
 #include "Request.hpp"
 
 
 class Cgi {
     private:
+#if DEBUG
+		struct timeval _start_time;
+#endif
 		char								**envToChar();
 		std::map<std::string, std::string>	m_env;
 		std::string							m_requestMsg;

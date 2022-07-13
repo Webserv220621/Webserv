@@ -6,16 +6,16 @@
 
 Request::Request() {
 	reset();
-	_part_cnt = 0;
 }
 
 Request::~Request() {};
 
 int Request::append_msg(char* str) {
 #if DEBUG
+	struct timeval _start_time;
+	gettimeofday(&_start_time, NULL);
 	if (_part_cnt == 0) {
-		std::cout << "< receiving request msg..." << std::endl;
-		gettimeofday(&_start_time, NULL);
+		__LOG("< receiving request msg...");
 	}
 	_part_cnt++;
 #endif
@@ -35,17 +35,22 @@ int Request::append_msg(char* str) {
 			m_current_state = ret;
 			m_is_done = true;
 			m_is_valid = false;
+#if DEBUG
+			struct timeval current;
+			gettimeofday(&current, NULL);
+			_elapsed += (current.tv_sec - _start_time.tv_sec) * 1000 * 1000 + (current.tv_usec - _start_time.tv_usec);
+			std::cout << "   [ invalid request --- elapsed: " << (_elapsed / 1000) << "ms ]" << std::endl;
+#endif
 			return ret;
 		}
 	}
 
 #if DEBUG
-	if (m_is_done) {
-		struct timeval current;
-		gettimeofday(&current, NULL);
-		unsigned int elapsed = millisec(_start_time, current);
-		std::cout << "   [ part: " << _part_cnt << ",  elapsed: " << elapsed << "ms ]" << std::endl;
-	}
+	struct timeval current;
+	gettimeofday(&current, NULL);
+	_elapsed += (current.tv_sec - _start_time.tv_sec) * 1000 * 1000 + (current.tv_usec - _start_time.tv_usec);
+	if (m_is_done)
+		std::cout << "   [ request part: " << _part_cnt << ",  elapsed: " << (_elapsed / 1000) << "ms ]" << std::endl;
 #endif
 
 	return ret;
@@ -277,6 +282,10 @@ void Request::reset() {
 	m_current_state = READING_STARTLINE;
 	m_is_done = false;
 	m_is_valid = false;
+#if DEBUG
+	_elapsed = 0;
+	_part_cnt = 0;
+#endif
 }
 
 const std::map<std::string,std::string>& Request::getAllHeaders() const {

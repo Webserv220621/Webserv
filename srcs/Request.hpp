@@ -34,9 +34,9 @@ class Request {
 		bool m_is_done;
 		bool m_is_valid;
 #if DEBUG
-		struct timeval _start_time;
-#endif
+		unsigned long _elapsed;
 		int _part_cnt;
+#endif
 
 		int parse_startline(std::string& buf);
 		int parse_headers(std::string& buf);
