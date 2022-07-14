@@ -12,27 +12,29 @@ enum rq_state {
 	READING_STARTLINE = 0,
 	READING_HEADERS,
 	READING_BODY,
+	READING_CHUNK_SIZE,
+	READING_CHUNK_DATA,
 	RECV_END
 };
 
 class Request {
 	private:
 		std::string m_raw;
-		std::string m_prev;
+		std::string m_body_buf;
 		std::string m_method;
 		Uri m_uri;
 		std::string m_version;
 		std::map<std::string, std::string> m_headers;
 		std::string m_body;
-		bool m_body_chunked;
 		long m_body_length;
-		bool m_chunk_size_ready;
 		unsigned long m_chunk_size;
-		long m_current_body_size;
 		std::string m_chunk_data;
 		int m_current_state;
 		bool m_is_done;
 		bool m_is_valid;
+		int m_raw_idx;
+		bool m_append_finished;
+		int m_body_idx;
 #if DEBUG
 		unsigned long _elapsed;
 		int _part_cnt;
@@ -40,11 +42,13 @@ class Request {
 
 		int parse_startline(std::string& buf);
 		int parse_headers(std::string& buf);
-		int process_startline(std::string& buf);
-		int process_headers(std::string& buf);
+		int process_startline();
+		int process_headers();
 		int process_body(std::string& buf);
 		int process_body_chunked(std::string& buf);
 		int process_body_length(std::string& buf);
+		int read_chunk_size();
+		int read_chunk_data();
 		
 	public:
 		Request();

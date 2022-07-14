@@ -105,6 +105,10 @@ const std::string& Uri::getQuery() const {
 	return m_query;
 }
 
+const std::string& Uri::getRaw() const {
+	return m_uri;
+}
+
 size_t Uri::getLength() const {
 	return m_uri.length();
 }

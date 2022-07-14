@@ -18,6 +18,7 @@ class Uri {
 		void setPath();
 		void setQuery();
 
+		Uri(const Uri& other);
 
 	public:
 		Uri();
@@ -30,6 +31,7 @@ class Uri {
 		const std::string& getPort() const;
 		const std::string& getPath() const;
 		const std::string& getQuery() const;
+		const std::string& getRaw() const;
 		size_t getLength() const;
 		void reset();
 };
