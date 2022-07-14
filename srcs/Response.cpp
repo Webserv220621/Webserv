@@ -87,14 +87,35 @@ void Response::initResponse(Server& server, Request& request) {
     if (m_requestPath.substr(m_requestPath.find_last_of(".")+1) != m_cgiext || m_method != "POST")
         m_cgiPath = "";
     m_requestBody = request.getBody();
+
     m_host =request.getUri().getHost();
     m_port = request.getUri().getPort();
-    // uri에 host, port 정보가 없으면 server 정보를 적용
-    // TODO: servername이 있으면 servername 우선
+    // uri에 host 정보가 없으면 request의 Host Header를 적용
+    if (m_host == "") {
+        std::string tmp = request.getHeaderValue("host");
+        size_t n = tmp.find(':');
+        if (n == std::string::npos)
+            m_host = tmp;
+        else
+            m_host= tmp.substr(0, n);
+    }
+    if (m_port == "") {
+        std::string tmp = request.getHeaderValue("host");
+        size_t n = tmp.find(':');
+        if (n == std::string::npos)
+            m_port = "";
+        else
+            m_port= tmp.substr(n + 1);
+    }
+    // 그래도 없으면 server 정보를 적용 
     if (m_host == "")
         m_host = server.getHost();
     if (m_port == "")
         m_port = ft_to_string(server.getPort());
+    //  servername이 있으면 servername 우선
+    if (server.getServername() != "")
+        m_host = server.getServername();
+
     cgiWeb.init(m_location, request);
     m_cgi = cgiWeb;
     m_body = "";
@@ -455,8 +476,6 @@ void Response::addDirectory(std::string &body)
     std::string http_host_port = "http://" + m_host;
     if (m_port != "")
         http_host_port += ":" + m_port;
-    if (http_host_port[http_host_port.length() - 1] != '/')
-        http_host_port += "/";
     DIR *dir;
     struct dirent *diread = NULL;
 
@@ -470,7 +489,7 @@ void Response::addDirectory(std::string &body)
         std::string file_name(diread->d_name);
 		if (file_name != "." && file_name != "..")
 		{
-			body += "<a href=" + http_host_port + file_name + " >" + file_name + "</a><br>";//file_name이 주소로 하이퍼링크 연결
+			body += "<a href=" + http_host_port + m_uripath + file_name + " >" + file_name + "</a><br>";//file_name이 주소로 하이퍼링크 연결
 		}
     }
     closedir(dir);
