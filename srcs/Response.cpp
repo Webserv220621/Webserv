@@ -78,6 +78,7 @@ void Response::initResponse(Server& server, Request& request) {
         m_autoIndex = m_location._autoindex;
         m_method = request.getMethod();
         m_cgiext = m_location._cgiext;
+        m_erroridx = server.getError();
     }
     else
         m_code = request.getState();
@@ -495,23 +496,35 @@ void Response::makeAutoIndex()
 
 void Response::makeErrorResponse(int error)
 {
+    std::ifstream readFile; 
+    std::stringstream readBuf;
+    
     if (error < 300)
         return ;
     if (error == 400 || error >= 500)
         m_connection = "Close";
-
-    std::string html = "";
-	html += "<!DOCTYPE html>\n";
-	html += "<html>\n";
-	html += "<head>\n";
-	html += "</head>\n";
-	html += "<body>";
-	html += "<h1>" + ft_to_string(error) + " ERROR PAGE</h1>";
-	html += "</body>\n";
-	html += "</html>\n";
-
-	m_body += html;
-    m_contentType = "text/html";
+    if (m_erroridx.find(error) != m_erroridx.end())//error_idx가 있는지
+    {
+        readFile.open(m_erroridx.find(error)->second, std::ifstream::in);
+        readBuf << readFile.rdbuf();
+        m_body = readBuf.str();
+        readFile.close();
+        m_contentType = "text/html";
+    }
+    else
+    {
+        std::string html = "";
+        html += "<!DOCTYPE html>\n";
+        html += "<html>\n";
+        html += "<head>\n";
+        html += "</head>\n";
+        html += "<body>";
+        html += "<h1>" + ft_to_string(error) + " ERROR PAGE</h1>";
+        html += "</body>\n";
+        html += "</html>\n";
+        m_body += html;
+        m_contentType = "text/html";
+    }
 }
 
 Location Response::findMatchingLocation(Server& s, Request& rq) {

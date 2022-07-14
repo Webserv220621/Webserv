@@ -43,6 +43,7 @@ class Response {
 		std::string					m_query;
 		Location					m_location;
 		std::string					m_cgiext;
+		std::map<int, std::string>	m_erroridx;
 
 		Location		findMatchingLocation(Server& server, Request& rq);
 
