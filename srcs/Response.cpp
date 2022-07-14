@@ -295,6 +295,12 @@ std::vector<std::string> split(std::string input, char delimiter) {
 void			Response::getMethod(void) {
     if (m_cgiPath != "")
 	{   
+        int is_exist = access(m_cgiPath.c_str(), F_OK); // F_OK 옵션은 파일존재여부만 확인
+        if (is_exist == -1) {
+            m_code = INTERNAL_SERVER_ERROR;
+            makeErrorResponse(m_code);
+            return;
+        }
         std::string retCgi = m_cgi.runCgi(m_cgiPath);
         std::vector <std::string> result;
 	    result = split(retCgi, '\n');
@@ -367,6 +373,12 @@ void			Response::postMethod(void) {
     }
     if (m_cgiPath != "")
 	{
+        int is_exist = access(m_cgiPath.c_str(), F_OK); // F_OK 옵션은 파일존재여부만 확인
+        if (is_exist == -1) {
+            m_code = INTERNAL_SERVER_ERROR;
+            makeErrorResponse(m_code);
+            return;
+        }
         std::string retCgi = m_cgi.runCgi(m_cgiPath);
         std::vector <std::string> result; 
         result = split(retCgi, '\n');
@@ -399,6 +411,12 @@ void			Response::postMethod(void) {
 void			Response::putMethod(void) {
     if (m_cgiPath != "")
 	{
+        int is_exist = access(m_cgiPath.c_str(), F_OK); // F_OK 옵션은 파일존재여부만 확인
+        if (is_exist == -1) {
+            m_code = INTERNAL_SERVER_ERROR;
+            makeErrorResponse(m_code);
+            return;
+        }
         std::string retCgi = m_cgi.runCgi(m_cgiPath);
         std::vector <std::string> result; 
 	    result = split(retCgi, '\n');

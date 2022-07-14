@@ -93,7 +93,7 @@ int Webserv::monitor_events(int kq) {
 				}
 				else {
 					// 커넥션객체 찾아서 리퀘스트객체에게 전달
-					buf[rdbytes] = '\0';
+					buf[ret] = '\0';
 					Request& rq = connection_list[event_fd].request;
 					rq.append_msg(buf);
 					if (! rq.isDone())
