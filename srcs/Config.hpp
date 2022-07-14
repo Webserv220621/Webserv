@@ -60,6 +60,10 @@ public:
     {
         return m_servername;
     }
+    std::map<int, std::string> getError()
+    {
+        return m_error;
+    }
 
     void initLocation(Location *loc);
     void parsingServer(std::vector<std::string>::iterator it, std::vector<std::string>::iterator end);
